@@ -29,7 +29,7 @@ public class AdminController {
         return ResponseEntity.ok(userService.createUser(userDto));
     }
 
-    @DeleteMapping("/users/{id")
+    @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();

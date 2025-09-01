@@ -2,7 +2,7 @@ import { useFetch } from '../../hooks/useFetch';
 import ClaimCard from '../../components/claim/ClaimCard';
 
 const ClaimStatus = () => {
-  const { data: claims, loading } = useFetch('/api/claims');
+  const { data: claims, loading } = useFetch('/claims');
 
   if (loading) return <div>Loading...</div>;
 

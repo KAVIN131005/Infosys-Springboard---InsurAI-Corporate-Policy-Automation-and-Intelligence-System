@@ -1,41 +1,52 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { login, register } from '../api/authService';
+import { apiClient } from '../api/apiClient';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Decode or fetch user info
-      setUser({ role: localStorage.getItem('role') });
-    }
+    const init = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // fetch profile
+          const res = await apiClient.get('/auth/me');
+          setUser(res.data);
+        } catch {
+          localStorage.removeItem('token');
+        }
+      }
+      setLoading(false);
+    };
+    init();
   }, []);
 
   const signIn = async (username, password) => {
     const data = await login(username, password);
     localStorage.setItem('token', data.token);
-    localStorage.setItem('role', data.role);
-    setUser({ role: data.role });
+    // fetch profile
+    const res = await apiClient.get('/auth/me');
+    setUser(res.data);
   };
 
   const signUp = async (username, password, role) => {
     const data = await register(username, password, role);
     localStorage.setItem('token', data.token);
-    localStorage.setItem('role', data.role);
-    setUser({ role: data.role });
+    const res = await apiClient.get('/auth/me');
+    setUser(res.data);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('role');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, logout }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, logout }}>
       {children}
     </AuthContext.Provider>
   );

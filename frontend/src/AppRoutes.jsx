@@ -14,20 +14,20 @@ import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import { useAuth } from './hooks/useAuth';
+import Spinner from './components/ui/Spinner';
 
 const ProtectedRoute = ({ children, roles }) => {
-  const { user } = useAuth();
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-  if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/dashboard" />;
-  }
+  const { user, loading } = useAuth();
+  if (loading) return <div className="flex justify-center p-8"><Spinner /></div>;
+  if (!user) return <Navigate to="/login" />;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" />;
   return children;
 };
 
 function AppRoutes() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner /></div>;
 
   return (
     <Router>

@@ -2,7 +2,7 @@ import { useFetch } from '../../hooks/useFetch';
 import PolicyCompare from '../../components/policy/PolicyCompare';
 
 const PolicyComparePage = () => {
-  const { data: policies, loading } = useFetch('/api/policies');
+  const { data: policies, loading } = useFetch('/policies');
 
   if (loading) return <div>Loading...</div>;
 

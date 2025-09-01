@@ -45,6 +45,11 @@ public class UserService {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
+    public UserDto getCurrentUserDto() {
+        User user = getCurrentUser();
+        return mapToDto(user);
+    }
+
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());

@@ -1,5 +1,12 @@
-const Input = ({ type, value, onChange, className = '' }) => (
-  <input type={type} value={value} onChange={onChange} className={`border p-2 rounded ${className}`} />
+const Input = ({ type = 'text', value, onChange, placeholder = '', className = '', ...rest }) => (
+  <input
+    type={type}
+    value={value}
+    onChange={onChange}
+    placeholder={placeholder}
+    className={`border p-2 rounded w-full ${className}`}
+    {...rest}
+  />
 );
 
 export default Input;

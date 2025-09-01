@@ -4,7 +4,7 @@ import PolicyDetails from '../../components/policy/PolicyDetails';
 
 const PolicyView = () => {
   const { id } = useParams();
-  const { data: policy, loading } = useFetch(`/api/policies/${id}`);
+  const { data: policy, loading } = useFetch(`/policies/${id}`);
 
   if (loading) return <div>Loading...</div>;
 

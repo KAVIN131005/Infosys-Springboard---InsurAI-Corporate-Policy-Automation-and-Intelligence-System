@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import com.example.insur.dto.UserDto;
+import com.example.insur.service.UserService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
     @PostMapping("/register")
         public ResponseEntity<JwtResponse> register(@RequestBody RegisterRequest request) {
@@ -29,4 +34,14 @@ public class AuthController {
             JwtResponse response = authService.login(request);
             return ResponseEntity.ok(response);
         }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> me() {
+        try {
+            UserDto dto = userService.getCurrentUserDto();
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            return ResponseEntity.ok(null);
+        }
+    }
 }

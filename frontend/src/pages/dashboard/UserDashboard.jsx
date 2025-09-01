@@ -2,7 +2,7 @@ import { useFetch } from '../../hooks/useFetch';
 import PolicyCard from '../../components/policy/PolicyCard';
 
 const UserDashboard = () => {
-  const { data: policies, loading } = useFetch('/api/policies');
+  const { data: policies, loading } = useFetch('/policies');
 
   if (loading) return <div>Loading...</div>;
 

@@ -1,5 +1,9 @@
-const Spinner = () => (
-  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+const Spinner = ({ size = 8 }) => (
+  <div
+    role="status"
+    aria-label="Loading"
+    className={`animate-spin rounded-full h-${size} w-${size} border-b-2 border-blue-500`}
+  />
 );
 
 export default Spinner;
