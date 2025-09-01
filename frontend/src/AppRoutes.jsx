@@ -13,42 +13,198 @@ import Chatbot from './pages/chatbot/Chatbot';
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from './context/AuthContext';
 import Spinner from './components/ui/Spinner';
 
 const ProtectedRoute = ({ children, roles }) => {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="flex justify-center p-8"><Spinner /></div>;
-  if (!user) return <Navigate to="/login" />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" />;
+  const { user, isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner />
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (roles && !roles.includes(user?.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return children;
+};
+
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner />
+      </div>
+    );
+  }
+  
+  if (isAuthenticated) {
+    // Redirect based on user role
+    switch (user?.role) {
+      case 'ADMIN':
+        return <Navigate to="/admin" replace />;
+      case 'BROKER':
+        return <Navigate to="/broker/policies" replace />;
+      default:
+        return <Navigate to="/dashboard" replace />;
+    }
+  }
+  
   return children;
 };
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner /></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <Router>
-      {user && <Navbar />}
+      {isAuthenticated && <Navbar />}
       <div className="flex">
-        {user && <Sidebar />}
-        <main className="flex-1 p-4">
+        {isAuthenticated && <Sidebar />}
+        <main className={`flex-1 ${isAuthenticated ? 'p-4' : ''}`}>
           <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-            <Route path="/admin/dashboard" element={<ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/broker/upload" element={<ProtectedRoute roles={['UPLOADER', 'ADMIN']}><BrokerUploadPolicy /></ProtectedRoute>} />
-            <Route path="/broker/policies" element={<ProtectedRoute roles={['UPLOADER', 'ADMIN']}><BrokerPolicies /></ProtectedRoute>} />
-            <Route path="/policy/view/:id" element={<ProtectedRoute><PolicyView /></ProtectedRoute>} />
-            <Route path="/policy/compare" element={<ProtectedRoute><PolicyComparePage /></ProtectedRoute>} />
-            <Route path="/claim/submit" element={<ProtectedRoute><SubmitClaim /></ProtectedRoute>} />
-            <Route path="/claim/status" element={<ProtectedRoute><ClaimStatus /></ProtectedRoute>} />
-            <Route path="/chatbot" element={<ProtectedRoute><Chatbot /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute roles={['ADMIN']}><AnalyticsDashboard /></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            {/* Public Routes */}
+            <Route 
+              path="/login" 
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/register" 
+              element={
+                <PublicRoute>
+                  <Register />
+                </PublicRoute>
+              } 
+            />
+
+            {/* Protected Routes - All Users */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/policy/view/:id" 
+              element={
+                <ProtectedRoute>
+                  <PolicyView />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/policy/compare" 
+              element={
+                <ProtectedRoute>
+                  <PolicyComparePage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/claim/submit" 
+              element={
+                <ProtectedRoute>
+                  <SubmitClaim />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/claim/status" 
+              element={
+                <ProtectedRoute>
+                  <ClaimStatus />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/chatbot" 
+              element={
+                <ProtectedRoute>
+                  <Chatbot />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Admin Only Routes */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/analytics" 
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <AnalyticsDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Broker Routes */}
+            <Route 
+              path="/broker/upload" 
+              element={
+                <ProtectedRoute roles={['BROKER', 'ADMIN']}>
+                  <BrokerUploadPolicy />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/broker/policies" 
+              element={
+                <ProtectedRoute roles={['BROKER', 'ADMIN']}>
+                  <BrokerPolicies />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Default and Catch-all Routes */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
       </div>

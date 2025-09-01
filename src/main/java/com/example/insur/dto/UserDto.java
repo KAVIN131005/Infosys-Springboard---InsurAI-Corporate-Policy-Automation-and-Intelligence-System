@@ -1,60 +1,38 @@
 package com.example.insur.dto;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserDto {
     private Long id;
     private String username;
     private String email;
-    private String role;
     private String password;
-
-    public UserDto() {}
-
-    public UserDto(Long id, String username, String email, String role, String password) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.role = role;
-        this.password = password;
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private LocalDate dateOfBirth;
+    private String address;
+    private String city;
+    private String state;
+    private String postalCode;
+    private String country;
+    private String profileImage;
+    private Boolean isVerified;
+    private Boolean isActive;
+    private String role;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    
+    // Helper method for full name
+    public String getFullName() {
+        return (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
     }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-     public void setRole(String role) {
-        this.role = role;
-    }
-
-       public String getRole() {
-        return role;
-    }
-      public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-  
-
 }

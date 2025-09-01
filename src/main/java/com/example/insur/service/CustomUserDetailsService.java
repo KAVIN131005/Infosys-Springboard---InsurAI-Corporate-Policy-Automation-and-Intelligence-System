@@ -1,6 +1,6 @@
 package com.example.insur.service;
 
-import com.example.insur.entity.User;
+
 import com.example.insur.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
