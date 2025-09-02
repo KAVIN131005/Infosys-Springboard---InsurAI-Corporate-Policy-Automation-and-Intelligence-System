@@ -1,10 +1,12 @@
 package com.example.insur.controller;
 
 import com.example.insur.dto.ClaimDto;
-import com.example.insur.service.AIServiceIntegrationFixed;
 import com.example.insur.service.ClaimService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
+// Ensure AIServiceIntegration exists and is imported correctly
+import com.example.insur.service.AIServiceIntegration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +18,18 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/enhanced-claims")
-@RequiredArgsConstructor
-@Slf4j
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class EnhancedClaimController {
 
+    private static final Logger log = LoggerFactory.getLogger(EnhancedClaimController.class);
+    
     private final ClaimService claimService;
-    private final AIServiceIntegrationFixed aiService;
+    private final AIServiceIntegration aiService;
+
+    public EnhancedClaimController(ClaimService claimService, AIServiceIntegration aiService) {
+        this.claimService = claimService;
+        this.aiService = aiService;
+    }
 
     @PostMapping("/submit")
     @PreAuthorize("isAuthenticated()")

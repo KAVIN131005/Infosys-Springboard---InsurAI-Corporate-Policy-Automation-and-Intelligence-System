@@ -1,9 +1,10 @@
 package com.example.insur.controller;
 
-import com.example.insur.service.AIServiceIntegrationFixed;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.example.insur.service.AIServiceIntegration;
+
 import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,12 +14,15 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/ai")
-@RequiredArgsConstructor
-@Slf4j
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class AIController {
 
-    private final AIServiceIntegrationFixed aiService;
+    private static final Logger log = LoggerFactory.getLogger(AIController.class);
+    private final AIServiceIntegration aiService;
+    
+    public AIController(AIServiceIntegration aiService) {
+        this.aiService = aiService;
+    }
 
     @PostMapping("/chat")
     @PreAuthorize("isAuthenticated()")
