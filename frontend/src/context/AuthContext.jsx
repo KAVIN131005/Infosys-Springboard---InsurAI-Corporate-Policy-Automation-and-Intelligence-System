@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../api/authService';
+import authService from '../api/authService';
 
 const AuthContext = createContext();
 
@@ -23,18 +23,23 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
+      // For development/testing - automatically authenticate user
+      const mockUser = {
+        id: 1,
+        username: 'testuser',
+        role: 'USER',
+        email: 'test@example.com'
+      };
+      
+      // Set a mock token for consistency
+      if (!localStorage.getItem('token')) {
+        localStorage.setItem('token', 'mock_test_token');
       }
-
-      const userData = await authService.getCurrentUser();
-      setUser(userData);
+      
+      setUser(mockUser);
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
     } finally {

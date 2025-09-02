@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { aiHealthService, chatService } from '../../api/aiService';
-import { getAllClaims } from '../../api/claimService';
+import { getClaims } from '../../api/claimService';
 import { getPolicies } from '../../api/policyService';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
@@ -27,10 +27,13 @@ const UserDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [policiesData, claimsData] = await Promise.all([
-        getPolicies().catch(() => []),
-        getAllClaims().catch(() => [])
+      const [claimsResult, policiesResult] = await Promise.allSettled([
+        getClaims().catch(() => []),
+        getPolicies().catch(() => [])
       ]);
+
+      const claimsData = claimsResult.status === 'fulfilled' ? claimsResult.value : [];
+      const policiesData = policiesResult.status === 'fulfilled' ? policiesResult.value : [];
 
       setDashboardData({
         policies: policiesData,

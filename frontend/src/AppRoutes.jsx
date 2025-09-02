@@ -11,6 +11,7 @@ import SubmitClaim from './pages/claim/SubmitClaim';
 import ClaimStatus from './pages/claim/ClaimStatus';
 import Chatbot from './pages/chatbot/Chatbot';
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
+import TestPage from './pages/TestPage';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import { useAuth } from './context/AuthContext';
@@ -83,6 +84,7 @@ function AppRoutes() {
         <main className={`flex-1 ${isAuthenticated ? 'p-4' : ''}`}>
           <Routes>
             {/* Public Routes */}
+            <Route path="/test" element={<TestPage />} />
             <Route 
               path="/login" 
               element={
