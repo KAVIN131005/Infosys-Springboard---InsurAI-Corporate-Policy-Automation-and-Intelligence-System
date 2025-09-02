@@ -28,7 +28,7 @@ public class UserService {
     }
 
     public UserDto createUser(UserDto userDto) {
-        Role role = roleRepository.findByName(userDto.getRole()).orElseThrow();
+        Role role = roleRepository.findFirstByName(userDto.getRole()).orElseThrow();
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));

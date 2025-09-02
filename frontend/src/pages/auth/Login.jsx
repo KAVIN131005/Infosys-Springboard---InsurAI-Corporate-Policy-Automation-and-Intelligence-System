@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { login } from '../../api/authService';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
@@ -8,14 +9,13 @@ import Spinner from '../../components/ui/Spinner';
 const Login = () => {
   const [formData, setFormData] = useState({
     username: '',
-    password: '',
-    role: 'USER' // Default role
+    password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const { signIn } = useAuth();
+  const { checkAuthStatus } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -42,8 +42,8 @@ const Login = () => {
     
     if (!formData.password.trim()) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 3) { // Reduced for demo
-      newErrors.password = 'Password must be at least 3 characters';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
     }
 
     setErrors(newErrors);
@@ -60,61 +60,31 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call with mock authentication
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Attempting login with:', { username: formData.username });
       
-      // Mock authentication logic
-      const mockUsers = {
-        'admin': { username: 'admin', role: 'ADMIN', email: 'admin@insur.com', id: 1 },
-        'broker': { username: 'broker', role: 'BROKER', email: 'broker@insur.com', id: 2 },
-        'user': { username: 'user', role: 'USER', email: 'user@insur.com', id: 3 }
-      };
-
-      const user = mockUsers[formData.username.toLowerCase()];
+      const result = await login(formData.username, formData.password);
+      console.log('Login successful:', { ...result, password: '[HIDDEN]' });
       
-      if (user && (formData.password === 'password' || formData.password === 'password123')) {
-        // Store token and user data
-        localStorage.setItem('token', `mock_token_${user.username}`);
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        // Redirect based on role
-        let redirectTo;
-        switch (user.role) {
-          case 'ADMIN':
-            redirectTo = '/admin';
-            break;
-          case 'BROKER':
-            redirectTo = '/broker/policies';
-            break;
-          default:
-            redirectTo = '/dashboard';
-        }
-        
-        window.location.href = redirectTo;
+      // Update auth context manually
+      await checkAuthStatus();
+      
+      // Navigate based on role
+      const userRole = result.user.role;
+      if (userRole === 'ADMIN') {
+        navigate('/admin');
+      } else if (userRole === 'BROKER') {
+        navigate('/broker/policies');
       } else {
-        throw new Error('Invalid credentials');
+        navigate('/dashboard');
       }
+      
     } catch (error) {
-      const errorMessage = error.message || 'Login failed';
+      console.error('Login error:', error);
+      const errorMessage = error.message || 'Invalid username or password';
       setErrors({ submit: errorMessage });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoLogin = (role) => {
-    const demoCredentials = {
-      'ADMIN': { username: 'admin', password: 'password' },
-      'BROKER': { username: 'broker', password: 'password' },
-      'USER': { username: 'user', password: 'password' }
-    };
-    
-    const creds = demoCredentials[role];
-    setFormData({
-      username: creds.username,
-      password: creds.password,
-      role: role
-    });
   };
 
   return (
@@ -131,30 +101,30 @@ const Login = () => {
 
         {/* Login Form */}
         <div className="bg-white rounded-xl shadow-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-                Login As
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isLoading}
-              >
-                <option value="USER">👤 User</option>
-                <option value="BROKER">🏢 Broker</option>
-                <option value="ADMIN">⚙️ Admin</option>
-              </select>
+          {/* Success Message from Registration */}
+          {location.state?.message && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <span className="text-green-600 text-xl mr-3">✅</span>
+                <div>
+                  <p className="text-sm font-medium text-green-800">
+                    {location.state.message}
+                  </p>
+                  {location.state?.registeredUser && (
+                    <p className="text-xs text-green-600 mt-1">
+                      You can now log in with username: <strong>{location.state.registeredUser.username}</strong>
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
+          )}
 
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username Field */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+                Username or Email
               </label>
               <div className="relative">
                 <input
@@ -166,7 +136,7 @@ const Login = () => {
                   className={`w-full px-4 py-3 pl-12 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                     errors.username ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="Enter your username"
+                  placeholder="Enter your username or email"
                   disabled={isLoading}
                 />
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">
@@ -243,32 +213,14 @@ const Login = () => {
             </Button>
           </form>
 
-          {/* Demo Login Buttons */}
-          <div className="mt-6 space-y-2">
-            <p className="text-sm text-gray-600 text-center font-medium">Quick Demo Login:</p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => handleDemoLogin('ADMIN')}
-                className="text-xs px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-                disabled={isLoading}
-              >
-                ⚙️ Admin
-              </button>
-              <button
-                onClick={() => handleDemoLogin('BROKER')}
-                className="text-xs px-3 py-2 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                disabled={isLoading}
-              >
-                🏢 Broker
-              </button>
-              <button
-                onClick={() => handleDemoLogin('USER')}
-                className="text-xs px-3 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                disabled={isLoading}
-              >
-                👤 User
-              </button>
-            </div>
+          {/* Forgot Password Link */}
+          <div className="mt-6 text-center">
+            <Link 
+              to="/forgot-password" 
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Forgot your password?
+            </Link>
           </div>
 
           {/* Register Link */}
@@ -282,16 +234,6 @@ const Login = () => {
                 Sign up here
               </Link>
             </p>
-          </div>
-        </div>
-
-        {/* Demo Credentials Info */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-blue-800 mb-2">📋 Demo Credentials:</h3>
-          <div className="text-xs text-blue-700 space-y-1">
-            <div><strong>Admin:</strong> admin / password</div>
-            <div><strong>Broker:</strong> broker / password</div>
-            <div><strong>User:</strong> user / password</div>
           </div>
         </div>
       </div>

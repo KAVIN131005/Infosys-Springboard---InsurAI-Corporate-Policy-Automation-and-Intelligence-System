@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService from '../api/authService';
+import { getUserData, isAuthenticated, clearAuthData, initializeAuth, getCurrentUser } from '../api/authService';
 
 const AuthContext = createContext();
 
@@ -23,23 +23,41 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      // For development/testing - automatically authenticate user
-      const mockUser = {
-        id: 1,
-        username: 'testuser',
-        role: 'USER',
-        email: 'test@example.com'
-      };
+      // Initialize auth system
+      initializeAuth();
       
-      // Set a mock token for consistency
-      if (!localStorage.getItem('token')) {
-        localStorage.setItem('token', 'mock_test_token');
+      const token = localStorage.getItem('auth_token');
+      const userData = localStorage.getItem('user_data');
+      
+      if (token && userData) {
+        const user = JSON.parse(userData);
+        
+        // Verify token is still valid by checking with backend
+        try {
+          const currentUser = await getCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
+            setIsAuthenticated(true);
+            console.log('User authenticated:', currentUser);
+          } else {
+            // Token is invalid, clear auth data
+            clearAuthData();
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        } catch (error) {
+          // If API call fails but we have local data, use it
+          console.warn('API verification failed, using local data:', error);
+          setUser(user);
+          setIsAuthenticated(true);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
       }
-      
-      setUser(mockUser);
-      setIsAuthenticated(true);
     } catch (error) {
       console.error('Auth check failed:', error);
+      clearAuthData();
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -47,64 +65,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signIn = async (username, password) => {
-    try {
-      setLoading(true);
-      const response = await authService.login(username, password);
-      
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-        setIsAuthenticated(true);
-        return { success: true, user: userData };
-      }
-      
-      throw new Error('Login failed - no token received');
-    } catch (error) {
-      console.error('Login error:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || error.message || 'Login failed' 
-      };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signUp = async (userData) => {
-    try {
-      setLoading(true);
-      const response = await authService.register(userData);
-      
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-        const userProfile = await authService.getCurrentUser();
-        setUser(userProfile);
-        setIsAuthenticated(true);
-        return { success: true, user: userProfile };
-      }
-      
-      return { success: true, message: 'Registration successful. Please verify your email.' };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || error.message || 'Registration failed' 
-      };
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const logout = () => {
-    localStorage.removeItem('token');
+    clearAuthData();
     setUser(null);
     setIsAuthenticated(false);
   };
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
+    localStorage.setItem('user_data', JSON.stringify(updatedUser));
   };
 
   const hasRole = (role) => {
@@ -113,20 +82,18 @@ export const AuthProvider = ({ children }) => {
 
   const isAdmin = () => hasRole('ADMIN');
   const isBroker = () => hasRole('BROKER');
-  const isUser = () => hasRole('USER');
+  const isUserRole = () => hasRole('USER');
 
   const value = {
     user,
     loading,
     isAuthenticated,
-    signIn,
-    signUp,
     logout,
     updateUser,
     hasRole,
     isAdmin,
     isBroker,
-    isUser,
+    isUser: isUserRole,
     checkAuthStatus
   };
 

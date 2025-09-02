@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { register } from '../../api/authService';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
 
 const Register = () => {
@@ -13,19 +13,20 @@ const Register = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    role: 'USER',
     phoneNumber: '',
-    companyName: '', // For brokers
-    licenseNumber: '', // For brokers
-    department: '' // For admins
+    role: 'USER',
+    // Broker-specific fields
+    companyName: '',
+    licenseNumber: '',
+    // Admin-specific fields
+    department: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [step, setStep] = useState(1); // Multi-step form
 
-  const { signUp } = useAuth();
+  const { checkAuthStatus } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -75,7 +76,7 @@ const Register = () => {
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'Last name is required';
     }
-    
+
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = 'Phone number is required';
     }
@@ -89,10 +90,10 @@ const Register = () => {
         newErrors.licenseNumber = 'License number is required for brokers';
       }
     }
-    
+
     if (formData.role === 'ADMIN') {
       if (!formData.department.trim()) {
-        newErrors.department = 'Department is required for admins';
+        newErrors.department = 'Department is required for administrators';
       }
     }
 
@@ -110,47 +111,25 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Remove confirmPassword from the data to send
+      const { confirmPassword, ...registrationData } = formData;
       
-      // Mock registration success
-      const mockUser = {
-        id: Date.now(),
-        username: formData.username,
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: formData.role,
-        phoneNumber: formData.phoneNumber,
-        ...(formData.role === 'BROKER' && {
-          companyName: formData.companyName,
-          licenseNumber: formData.licenseNumber
-        }),
-        ...(formData.role === 'ADMIN' && {
-          department: formData.department
-        })
-      };
+      console.log('Registering user with:', { ...registrationData, password: '[HIDDEN]' });
       
-      // Store user data
-      localStorage.setItem('token', `mock_token_${mockUser.username}`);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      const result = await register(registrationData);
+      console.log('Registration successful:', result);
       
-      // Redirect based on role
-      let redirectTo;
-      switch (mockUser.role) {
-        case 'ADMIN':
-          redirectTo = '/admin';
-          break;
-        case 'BROKER':
-          redirectTo = '/broker/policies';
-          break;
-        default:
-          redirectTo = '/dashboard';
-      }
-      
-      window.location.href = redirectTo;
+      // Always redirect to login page after successful registration
+      // User must manually log in with their credentials
+      navigate('/login', { 
+        state: { 
+          message: 'Registration successful! Please log in with your credentials.',
+          registeredUser: result.user
+        }
+      });
       
     } catch (error) {
+      console.error('Registration error:', error);
       const errorMessage = error.message || 'Registration failed';
       setErrors({ submit: errorMessage });
     } finally {
@@ -186,9 +165,9 @@ const Register = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={isLoading}
               >
-                <option value="USER">👤 Individual User</option>
-                <option value="BROKER">🏢 Insurance Broker</option>
-                <option value="ADMIN">⚙️ System Administrator</option>
+                <option value="USER">Customer</option>
+                <option value="BROKER">Insurance Broker</option>
+                <option value="ADMIN">System Administrator</option>
               </select>
             </div>
 
@@ -262,11 +241,11 @@ const Register = () => {
                   className={`w-full px-4 py-3 pl-12 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     errors.username ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="johndoe"
+                  placeholder="johndoe123"
                   disabled={isLoading}
                 />
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">
-                  🏷️
+                  🆔
                 </span>
               </div>
               {errors.username && (
@@ -300,6 +279,7 @@ const Register = () => {
               )}
             </div>
 
+            {/* Phone Number */}
             <div>
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number
@@ -318,7 +298,7 @@ const Register = () => {
                   disabled={isLoading}
                 />
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">
-                  📱
+                  📞
                 </span>
               </div>
               {errors.phoneNumber && (
@@ -397,10 +377,10 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Role-specific fields */}
+            {/* Role-specific Fields */}
             {formData.role === 'BROKER' && (
-              <div className="space-y-4 bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-sm font-semibold text-blue-800">🏢 Broker Information</h3>
+              <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+                <h3 className="text-lg font-medium text-blue-900 mb-2">📋 Broker Information</h3>
                 
                 <div>
                   <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -416,7 +396,7 @@ const Register = () => {
                       className={`w-full px-4 py-3 pl-12 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors.companyName ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Insurance Solutions Inc."
+                      placeholder="ABC Insurance Services"
                       disabled={isLoading}
                     />
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">
@@ -442,11 +422,11 @@ const Register = () => {
                       className={`w-full px-4 py-3 pl-12 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors.licenseNumber ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="INS-12345678"
+                      placeholder="LIC123456789"
                       disabled={isLoading}
                     />
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">
-                      📋
+                      🆔
                     </span>
                   </div>
                   {errors.licenseNumber && (
@@ -457,30 +437,30 @@ const Register = () => {
             )}
 
             {formData.role === 'ADMIN' && (
-              <div className="space-y-4 bg-red-50 p-4 rounded-lg">
-                <h3 className="text-sm font-semibold text-red-800">⚙️ Admin Information</h3>
+              <div className="bg-red-50 p-4 rounded-lg space-y-4">
+                <h3 className="text-lg font-medium text-red-900 mb-2">⚙️ Administrator Information</h3>
                 
                 <div>
                   <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
                     Department
                   </label>
-                  <select
-                    id="department"
-                    name="department"
-                    value={formData.department}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.department ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    disabled={isLoading}
-                  >
-                    <option value="">Select Department</option>
-                    <option value="IT">🖥️ IT Department</option>
-                    <option value="OPERATIONS">🔄 Operations</option>
-                    <option value="CUSTOMER_SERVICE">🎧 Customer Service</option>
-                    <option value="COMPLIANCE">📋 Compliance</option>
-                    <option value="FINANCE">💰 Finance</option>
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="department"
+                      name="department"
+                      value={formData.department}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-3 pl-12 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errors.department ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="IT Operations"
+                      disabled={isLoading}
+                    />
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">
+                      🏛️
+                    </span>
+                  </div>
                   {errors.department && (
                     <p className="mt-1 text-sm text-red-600">⚠️ {errors.department}</p>
                   )}
@@ -488,10 +468,13 @@ const Register = () => {
               </div>
             )}
 
-            {/* Submit Error */}
+            {/* Error Display */}
             {errors.submit && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-600">❌ {errors.submit}</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex">
+                  <span className="text-red-400 text-xl mr-3">❌</span>
+                  <span className="text-red-800">{errors.submit}</span>
+                </div>
               </div>
             )}
 
@@ -499,7 +482,7 @@ const Register = () => {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
             >
               {isLoading ? (
                 <>

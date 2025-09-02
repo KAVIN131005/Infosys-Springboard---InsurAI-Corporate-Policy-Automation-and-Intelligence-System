@@ -86,64 +86,74 @@ export const getTokenExpirationTime = (token) => {
   }
 };
 
-// Legacy support for existing components
+// Authentication API calls
 export const login = async (username, password) => {
   try {
-    const response = await authClient.post('/api/auth/login', { username, password });
-    const { token, refreshToken, user } = response.data;
+    const response = await authClient.post('/api/auth/login', { 
+      username, 
+      password 
+    });
+    
+    const { token, refreshToken, id, role, email, firstName, lastName } = response.data;
     
     if (token) {
+      // Store token and user data
       setAuthToken(token);
-      setRefreshToken(refreshToken);
-      setUserData(user);
+      if (refreshToken) {
+        setRefreshToken(refreshToken);
+      }
+      
+      // Create user object from response
+      const userData = {
+        id,
+        username,
+        email,
+        firstName,
+        lastName,
+        role
+      };
+      
+      setUserData(userData);
+      
+      return {
+        token,
+        user: userData,
+        message: 'Login successful'
+      };
     }
     
-    return response.data;
+    throw new Error('Invalid response from server');
   } catch (error) {
     console.error('Login error:', error);
-    throw error.response?.data || { message: 'Login failed' };
+    const message = error.response?.data?.message || error.message || 'Login failed';
+    throw new Error(message);
   }
 };
 
-export const register = async (username, password, role) => {
+export const register = async (userData) => {
   try {
-    const response = await authClient.post('/api/auth/register', { username, password, role });
-    return response.data;
+    const response = await authClient.post('/api/auth/register', userData);
+    
+    const { id, username, email, firstName, lastName, role } = response.data;
+    
+    // Registration successful - do NOT auto-login
+    // User must manually login with their credentials
+    return {
+      message: 'Registration successful! Please log in with your credentials.',
+      user: { id, username, email, firstName, lastName, role }
+    };
   } catch (error) {
     console.error('Registration error:', error);
-    throw error.response?.data || { message: 'Register failed' };
+    // Check multiple possible error message fields
+    const message = error.response?.data?.error || 
+                   error.response?.data?.message || 
+                   error.message || 
+                   'Registration failed';
+    throw new Error(message);
   }
 };
 
 // Enhanced authentication functions
-export const loginUser = async (credentials) => {
-  try {
-    const response = await authClient.post('/api/auth/login', credentials);
-    const { token, refreshToken, user } = response.data;
-    
-    if (token) {
-      setAuthToken(token);
-      setRefreshToken(refreshToken);
-      setUserData(user);
-    }
-    
-    return response.data;
-  } catch (error) {
-    console.error('Login error:', error);
-    throw new Error(error.response?.data?.message || 'Login failed');
-  }
-};
-
-export const registerUser = async (userData) => {
-  try {
-    const response = await authClient.post('/api/auth/register', userData);
-    return response.data;
-  } catch (error) {
-    console.error('Registration error:', error);
-    throw new Error(error.response?.data?.message || 'Registration failed');
-  }
-};
-
 export const refreshAuthToken = async () => {
   try {
     const refreshToken = getRefreshToken();
@@ -331,24 +341,24 @@ export const isAuthenticated = () => {
 // Get user roles
 export const getUserRoles = () => {
   const userData = getUserData();
-  return userData?.roles || [];
+  return userData?.role ? [userData.role] : [];
 };
 
 // Check if user has specific role
 export const hasRole = (role) => {
-  const roles = getUserRoles();
-  return roles.includes(role);
+  const userData = getUserData();
+  return userData?.role === role;
 };
 
 // Check if user has any of the specified roles
 export const hasAnyRole = (rolesList) => {
-  const userRoles = getUserRoles();
-  return rolesList.some(role => userRoles.includes(role));
+  const userData = getUserData();
+  return rolesList.includes(userData?.role);
 };
 
 export default {
-  loginUser,
-  registerUser,
+  login,
+  register,
   logoutUser,
   refreshAuthToken,
   verifyToken,
@@ -363,8 +373,5 @@ export default {
   hasRole,
   hasAnyRole,
   initializeAuth,
-  clearAuthData,
-  // Legacy support
-  login,
-  register
+  clearAuthData
 };

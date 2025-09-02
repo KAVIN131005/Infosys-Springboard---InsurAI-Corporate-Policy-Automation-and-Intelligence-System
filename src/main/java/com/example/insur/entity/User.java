@@ -61,7 +61,7 @@ public class User implements UserDetails {
     private String profileImage;
 
     @Column(name = "is_verified")
-    private Boolean isVerified = false;
+    private Boolean isVerified = true;
 
     @Column(name = "verification_token")
     private String verificationToken;

@@ -60,6 +60,40 @@ claimClient.interceptors.response.use(
   }
 );
 
+// User Policy Functions for Claims
+export const getUserPolicies = async (userId = null) => {
+  try {
+    const endpoint = userId ? `/api/policies/user/${userId}` : '/api/policies/user';
+    const response = await claimClient.get(endpoint);
+    return response.data;
+  } catch (error) {
+    console.error('Get user policies error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch user policies');
+  }
+};
+
+export const getPolicyById = async (policyId) => {
+  try {
+    const response = await claimClient.get(`/api/policies/${policyId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Get policy by ID error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch policy details');
+  }
+};
+
+export const validatePolicyForClaim = async (policyId, claimType) => {
+  try {
+    const response = await claimClient.post(`/api/policies/${policyId}/validate-claim`, {
+      claimType
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Validate policy for claim error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to validate policy for claim');
+  }
+};
+
 // Legacy function support
 export const submitClaim = async (file, policyId) => {
   try {
@@ -406,6 +440,9 @@ export default {
   getClaimStatistics,
   getClaimsByStatus,
   getUserClaims,
+  getUserPolicies,
+  getPolicyById,
+  validatePolicyForClaim,
   addClaimComment,
   getClaimComments,
   searchClaims,

@@ -8,6 +8,9 @@ public class JwtResponse {
     private String type = "Bearer";
     private Long id;
     private String username;
+    private String email;
+    private String firstName;
+    private String lastName;
     private String role;
 }
 
