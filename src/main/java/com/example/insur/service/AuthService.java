@@ -87,6 +87,22 @@ public class AuthService {
         return buildJwtResponse(jwtToken, user);
     }
 
+    public JwtResponse refreshToken(String refreshToken) {
+        try {
+            // For now, we'll use the same token validation logic
+            // In a real implementation, you'd have separate refresh token logic
+            String username = jwtService.extractUsername(refreshToken);
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Generate new token
+            String newToken = jwtService.generateToken(user);
+            return buildJwtResponse(newToken, user);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+    }
+
     private JwtResponse buildJwtResponse(String jwtToken, User user) {
         JwtResponse jwtResponse = new JwtResponse();
         jwtResponse.setToken(jwtToken);

@@ -15,11 +15,11 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const { checkAuthStatus } = useAuth();
+  const { loginUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,17 +65,22 @@ const Login = () => {
       const result = await login(formData.username, formData.password);
       console.log('Login successful:', { ...result, password: '[HIDDEN]' });
       
-      // Update auth context manually
-      await checkAuthStatus();
+      // Update auth context immediately
+      loginUser(result.user, result.token);
       
-      // Navigate based on role
-      const userRole = result.user.role;
-      if (userRole === 'ADMIN') {
-        navigate('/admin');
-      } else if (userRole === 'BROKER') {
-        navigate('/broker/policies');
+      // Navigate to the intended location or role-based default
+      if (from && from !== '/login' && from !== '/register') {
+        navigate(from);
       } else {
-        navigate('/dashboard');
+        // Navigate based on role
+        const userRole = result.user.role;
+        if (userRole === 'ADMIN') {
+          navigate('/admin');
+        } else if (userRole === 'BROKER') {
+          navigate('/broker/policies');
+        } else {
+          navigate('/dashboard');
+        }
       }
       
     } catch (error) {

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
@@ -15,6 +15,7 @@ import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import { useAuth } from './context/AuthContext';
 import Spinner from './components/ui/Spinner';
+import { hasValidToken } from './utils/authUtils';
 
 // Simple Home/Landing Page Component
 const HomePage = () => (
@@ -67,9 +68,14 @@ const HomePage = () => (
 );
 
 const ProtectedRoute = ({ children, roles }) => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading, initialized } = useAuth();
+  const location = useLocation();
   
-  if (loading) {
+  // If we have a valid token in localStorage, don't redirect immediately
+  const hasToken = hasValidToken();
+  
+  // Show loading while initializing or if we have a token but auth state not ready
+  if (loading || !initialized || (hasToken && !isAuthenticated && !user)) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Spinner />
@@ -77,26 +83,42 @@ const ProtectedRoute = ({ children, roles }) => {
     );
   }
   
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  // Only redirect to login if we're sure the user is not authenticated
+  if (!isAuthenticated && !hasToken) {
+    // Store the current location to redirect back after login
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  if (roles && !roles.includes(user?.role)) {
-    return <Navigate to="/dashboard" replace />;
+  // If user doesn't have required role but is authenticated
+  if (roles && user && !roles.includes(user.role)) {
+    switch (user.role) {
+      case 'ADMIN':
+        return <Navigate to="/admin" replace />;
+      case 'BROKER':
+        return <Navigate to="/broker/policies" replace />;
+      default:
+        return <Navigate to="/dashboard" replace />;
+    }
   }
   
   return children;
 };
 
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, user, loading } = useAuth();
+  const { isAuthenticated, user, loading, initialized } = useAuth();
+  const hasToken = hasValidToken();
   
-  if (loading) {
-    return children; // Show login/register while loading
+  // If loading or we have a token but auth state not yet determined, show loading
+  if (loading || !initialized || (hasToken && !isAuthenticated && !user)) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner />
+      </div>
+    );
   }
   
+  // If authenticated, redirect based on user role
   if (isAuthenticated && user) {
-    // Redirect based on user role
     switch (user.role) {
       case 'ADMIN':
         return <Navigate to="/admin" replace />;
@@ -111,7 +133,19 @@ const PublicRoute = ({ children }) => {
 };
 
 function AppRoutes() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, initialized } = useAuth();
+
+  // Show loading spinner during initial auth check
+  if (loading || !initialized) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <Spinner />
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -243,6 +277,51 @@ function AppRoutes() {
             />
             
             <Route 
+              path="/admin/policies" 
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <BrokerPolicies />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/admin/upload-policy" 
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <BrokerUploadPolicy />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/admin/compare" 
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <PolicyComparePage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/admin/claims" 
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <ClaimStatus />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/admin/submit-claim" 
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <SubmitClaim />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
               path="/analytics" 
               element={
                 <ProtectedRoute roles={['ADMIN', 'BROKER']}>
@@ -252,6 +331,24 @@ function AppRoutes() {
             />
 
             {/* Broker Routes */}
+            <Route 
+              path="/broker" 
+              element={
+                <ProtectedRoute roles={['BROKER']}>
+                  <UserDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/broker/dashboard" 
+              element={
+                <ProtectedRoute roles={['BROKER']}>
+                  <UserDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route 
               path="/broker/upload" 
               element={
@@ -269,6 +366,33 @@ function AppRoutes() {
                 </ProtectedRoute>
               } 
             />
+            
+            <Route 
+              path="/broker/compare" 
+              element={
+                <ProtectedRoute roles={['BROKER']}>
+                  <PolicyComparePage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/broker/claims" 
+              element={
+                <ProtectedRoute roles={['BROKER']}>
+                  <ClaimStatus />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/broker/submit-claim" 
+              element={
+                <ProtectedRoute roles={['BROKER']}>
+                  <SubmitClaim />
+                </ProtectedRoute>
+              } 
+            />
 
             {/* Additional User Routes */}
             <Route 
@@ -276,6 +400,42 @@ function AppRoutes() {
               element={
                 <ProtectedRoute roles={['USER']}>
                   <UserDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/user/compare" 
+              element={
+                <ProtectedRoute roles={['USER']}>
+                  <PolicyComparePage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/user/claims" 
+              element={
+                <ProtectedRoute roles={['USER']}>
+                  <ClaimStatus />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/user/submit-claim" 
+              element={
+                <ProtectedRoute roles={['USER']}>
+                  <SubmitClaim />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/user/chatbot" 
+              element={
+                <ProtectedRoute roles={['USER']}>
+                  <Chatbot />
                 </ProtectedRoute>
               } 
             />

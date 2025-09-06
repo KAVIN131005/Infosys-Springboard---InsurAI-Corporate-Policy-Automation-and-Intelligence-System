@@ -31,10 +31,32 @@ public class UserService {
         Role role = roleRepository.findFirstByName(userDto.getRole()).orElseThrow();
         User user = new User();
         user.setUsername(userDto.getUsername());
+        user.setEmail(userDto.getEmail());
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         user.setRole(role);
         user = userRepository.save(user);
         return mapToDto(user);
+    }
+
+    public UserDto updateUser(Long id, UserDto userDto) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setEmail(userDto.getEmail());
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+        if (userDto.getRole() != null) {
+            Role role = roleRepository.findFirstByName(userDto.getRole()).orElseThrow();
+            user.setRole(role);
+        }
+        user = userRepository.save(user);
+        return mapToDto(user);
+    }
+
+    public void updateUserStatus(Long id, String status) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        // Add status field to User entity if needed, for now just update
+        userRepository.save(user);
     }
 
     public void deleteUser(Long id) {
@@ -54,7 +76,11 @@ public class UserService {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
         dto.setRole(user.getRole().getName());
+        dto.setCreatedAt(user.getCreatedAt());
         return dto;
     }
 }

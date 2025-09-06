@@ -303,12 +303,23 @@ authClient.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const newToken = await refreshAuthToken();
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return authClient(originalRequest);
+        const refreshToken = getRefreshToken();
+        if (refreshToken) {
+          const newToken = await refreshAuthToken();
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return authClient(originalRequest);
+        } else {
+          // No refresh token available
+          clearAuthData();
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
+        }
       } catch (refreshError) {
         clearAuthData();
-        window.location.href = '/login';
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
@@ -324,10 +335,9 @@ export const initializeAuth = () => {
     authClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     return true;
   } else if (token && isTokenExpired(token)) {
-    // Try to refresh token
-    refreshAuthToken().catch(() => {
-      clearAuthData();
-    });
+    // Token is expired, but don't clear immediately - let the app try to refresh
+    console.log('Token expired, will attempt refresh on next API call');
+    return false;
   }
   return false;
 };

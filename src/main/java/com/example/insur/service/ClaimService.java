@@ -269,8 +269,50 @@ public class ClaimService {
         return dto;
     }
 
-    // Legacy method for backward compatibility
-    private ClaimDto mapToDto(Claim claim) {
+    public List<ClaimDto> getAllClaims() {
+        return claimRepository.findAll().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    public ClaimDto getUserClaimDetails(Long claimId, String username) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new RuntimeException("Claim not found"));
+        
+        // Check if user owns this claim
+        if (!claim.getSubmittedBy().getUsername().equals(username)) {
+            throw new RuntimeException("Unauthorized access to claim");
+        }
+        
         return convertToDto(claim);
+    }
+
+    public void updateClaimStatus(Long claimId, String status) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new RuntimeException("Claim not found"));
+        claim.setStatus(status);
+        claim.setUpdatedAt(LocalDateTime.now());
+        claimRepository.save(claim);
+    }
+
+    // Simplified approval method for AdminController
+    public void approveClaim(Long claimId) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new RuntimeException("Claim not found"));
+        claim.setStatus("APPROVED");
+        claim.setApprovedAmount(claim.getClaimAmount());
+        claim.setUpdatedAt(LocalDateTime.now());
+        claimRepository.save(claim);
+        createClaimPayment(claim);
+    }
+
+    // Simplified rejection method for AdminController
+    public void rejectClaim(Long claimId, String reason) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new RuntimeException("Claim not found"));
+        claim.setStatus("REJECTED");
+        claim.setRejectionReason(reason);
+        claim.setUpdatedAt(LocalDateTime.now());
+        claimRepository.save(claim);
     }
 }
