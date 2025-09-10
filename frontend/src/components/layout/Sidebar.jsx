@@ -33,6 +33,7 @@ const Sidebar = () => {
     } else { // USER
       return [
         { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+        // USER-facing policies route should map to the public consumer view
         { path: '/policies', label: 'Available Policies', icon: '📋' },
         { path: '/user/compare', label: 'Compare Policies', icon: '⚖️' },
         { path: '/user/claims', label: 'My Claims', icon: '📝' },

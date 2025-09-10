@@ -188,7 +188,7 @@ function AppRoutes() {
             <Route 
               path="/policies" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute roles={["BROKER","ADMIN"]}>
                   <BrokerPolicies />
                 </ProtectedRoute>
               } 

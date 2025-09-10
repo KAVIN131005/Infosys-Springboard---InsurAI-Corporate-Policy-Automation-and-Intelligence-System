@@ -19,35 +19,48 @@ const PolicyComparePage = () => {
   const fetchPolicies = async () => {
     try {
       setLoading(true);
-      let endpoint = '/public/policies'; // Use public endpoint as primary
-      
-      // Try role-specific endpoints as backup
+      // Try multiple endpoints in prioritized order. This makes the page resilient
+      // to missing role-specific endpoints or 401s while still returning data.
+      const endpoints = [
+        '/public/policies',
+        '/user/policies',
+        '/broker/policies',
+        '/admin/policies'
+      ];
+
+      // If user has explicit role, try their role-specific endpoint first
       if (user?.role === 'ADMIN') {
-        try {
-          const adminResponse = await apiClient.get('/admin/policies');
-          setPolicies(adminResponse.data || []);
-          return;
-        } catch (adminError) {
-          console.log('Admin endpoint failed, trying public endpoint');
-        }
+        endpoints.unshift('/admin/policies');
       } else if (user?.role === 'BROKER') {
+        endpoints.unshift('/broker/policies');
+      } else if (user?.role === 'USER') {
+        endpoints.unshift('/user/policies');
+      }
+
+      let loaded = false;
+      for (const endpoint of endpoints) {
         try {
-          const brokerResponse = await apiClient.get('/broker/policies');
-          setPolicies(brokerResponse.data || []);
-          return;
-        } catch (brokerError) {
-          console.log('Broker endpoint failed, trying public endpoint');
+          const response = await apiClient.get(endpoint);
+          if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
+            setPolicies(response.data);
+            loaded = true;
+            break;
+          } else if (response?.data && Array.isArray(response.data)) {
+            // accept empty arrays but stop trying more endpoints
+            setPolicies(response.data);
+            loaded = true;
+            break;
+          }
+        } catch (e) {
+          // swallow per-endpoint errors and try next
+          console.debug(`Endpoint ${endpoint} failed:`, e?.response?.status || e.message);
         }
       }
-      
-      // Use public endpoint
-      const response = await apiClient.get(endpoint);
-      setPolicies(response.data || []);
-    } catch (error) {
-      console.error('Error fetching policies:', error);
-      setError('Failed to load policies from server');
-      // Set comprehensive mock data as fallback
-      setPolicies([
+
+      if (!loaded) {
+        setError('Failed to load policies from server');
+        // Set comprehensive mock data as fallback so UI is usable
+        setPolicies([
         {
           id: 1,
           name: 'Comprehensive Health Plan',
@@ -121,6 +134,7 @@ const PolicyComparePage = () => {
           description: 'International travel insurance with medical coverage'
         }
       ]);
+      }
     } finally {
       setLoading(false);
     }
