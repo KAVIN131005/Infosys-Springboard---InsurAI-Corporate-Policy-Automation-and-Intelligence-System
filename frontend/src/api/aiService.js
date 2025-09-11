@@ -1,332 +1,132 @@
-import axios from 'axios';
-import { getAuthToken, isTokenExpired, refreshAuthToken } from './authService';
+// AI Service for chatbot functionality
+import apiClient from './apiClient';
 
-// Create axios instance for AI services
-const aiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
-  timeout: 30000,
-});
+const AI_CANDIDATES = [
+  'http://localhost:8003',  // Python AI service (updated port)
+  'http://localhost:8002',  // Python AI service (fallback)
+  'http://localhost:8001',  // Python AI service (fallback)
+  'http://localhost:8080',  // Java backend fallback
+];
 
-// Request interceptor to add auth token
-aiClient.interceptors.request.use(
-  async (config) => {
-    let token = getAuthToken();
-    
-    // Check if token is expired and refresh if needed
-    if (token && isTokenExpired(token)) {
-      try {
-        token = await refreshAuthToken();
-      } catch (error) {
-        console.error('Token refresh failed:', error);
-        // Redirect to login or handle token refresh failure
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-    }
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+let currentAiBaseUrl = null;
+
+/**
+ * Find and test working AI service base URL
+ */
+async function resolveAiBaseUrl() {
+  if (currentAiBaseUrl) {
+    return currentAiBaseUrl;
   }
-);
 
-// Response interceptor to handle errors
-aiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        const newToken = await refreshAuthToken();
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return aiClient(originalRequest);
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-    
-    return Promise.reject(error);
-  }
-);
-
-// AI Chat Services
-export const chatService = {
-  async sendMessage(message, conversationId = null) {
+  for (const baseUrl of AI_CANDIDATES) {
     try {
-      const response = await aiClient.post('/api/ai/chat', {
-        message,
-        conversation_id: conversationId
+      const response = await fetch(`${baseUrl}/health`, {
+        method: 'GET',
+        timeout: 5000,
       });
-      return response.data;
+      
+      if (response.ok) {
+        currentAiBaseUrl = baseUrl;
+        console.log(`✅ AI Service found at: ${baseUrl}`);
+        return baseUrl;
+      }
     } catch (error) {
-      console.error('Chat service error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to send message');
-    }
-  },
-
-  async getConversationHistory(conversationId) {
-    try {
-      const response = await aiClient.get(`/api/ai/chat/history/${conversationId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to get conversation history:', error);
-      throw new Error('Failed to retrieve conversation history');
+      console.log(`❌ AI Service not available at: ${baseUrl}`);
     }
   }
-};
+  
+  throw new Error('No AI service available');
+}
 
-// Text Analysis Services
-export const textAnalysisService = {
-  async analyzeText(text) {
+/**
+ * Chat service for sending messages to AI
+ */
+export const chatService = {
+  async sendMessage(message) {
     try {
-      if (!text || text.trim().length === 0) {
-        throw new Error('Text cannot be empty');
-      }
+      const baseUrl = await resolveAiBaseUrl();
       
-      const response = await aiClient.post('/api/ai/analyze-text', { text });
-      return response.data;
-    } catch (error) {
-      console.error('Text analysis error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to analyze text');
-    }
-  },
+      // Use the working chat endpoint with query parameter
+      const response = await fetch(`${baseUrl}/api/chat/query?question=${encodeURIComponent(message)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-  async analyzeSentiment(text) {
-    try {
-      const analysis = await this.analyzeText(text);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Chat service error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      // Ensure response has expected structure
       return {
-        sentiment: analysis.sentiment,
-        confidence: analysis.confidence,
-        score: analysis.sentiment_score || 0
+        response: data.response || "I'm sorry, I couldn't generate a response.",
+        intent: data.intent || 'general_inquiry',
+        confidence: data.confidence || 0.5,
+        suggestions: data.suggestions || [
+          "How can I file a claim?",
+          "What's covered in my policy?",
+          "Help with billing questions"
+        ],
+        status: data.status || 'success'
       };
     } catch (error) {
-      console.error('Sentiment analysis error:', error);
-      throw error;
+      console.error('Chat service error:', error);
+      throw new Error(`Failed to send message: ${error.message}`);
     }
   }
 };
 
-// Risk Assessment Services
-export const riskAssessmentService = {
-  async assessRisk(riskData) {
-    try {
-      const { age, location, policyType, coverage } = riskData;
-      
-      const response = await aiClient.post('/api/ai/assess-risk', {
-        age: parseInt(age),
-        location,
-        policy_type: policyType,
-        coverage: parseFloat(coverage)
-      });
-      
-      return response.data;
-    } catch (error) {
-      console.error('Risk assessment error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to assess risk');
-    }
-  },
-
-  async getBatchRiskAssessment(riskDataArray) {
-    try {
-      const assessments = await Promise.all(
-        riskDataArray.map(data => this.assessRisk(data))
-      );
-      return assessments;
-    } catch (error) {
-      console.error('Batch risk assessment error:', error);
-      throw error;
-    }
-  }
-};
-
-// Claim Analysis Services
-export const claimAnalysisService = {
-  async analyzeClaim(claimData) {
-    try {
-      const { description, amount, claimType } = claimData;
-      
-      const response = await aiClient.post('/api/ai/analyze-claim', {
-        description,
-        amount: parseFloat(amount),
-        claim_type: claimType
-      });
-      
-      return response.data;
-    } catch (error) {
-      console.error('Claim analysis error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to analyze claim');
-    }
-  },
-
-  async submitClaimWithAI(claimData) {
-    try {
-      const response = await aiClient.post('/api/claims/submit-with-ai', claimData);
-      return response.data;
-    } catch (error) {
-      console.error('AI claim submission error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to submit claim');
-    }
-  },
-
-  async reanalyzeClaim(claimId) {
-    try {
-      const response = await aiClient.post(`/api/claims/${claimId}/analyze`);
-      return response.data;
-    } catch (error) {
-      console.error('Claim reanalysis error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to reanalyze claim');
-    }
-  },
-
-  async bulkAnalyzeClaims(claimIds) {
-    try {
-      const response = await aiClient.post('/api/claims/bulk-analyze', {
-        claim_ids: claimIds
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Bulk claim analysis error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to analyze claims');
-    }
-  }
-};
-
-// Document Processing Services
-export const documentProcessingService = {
-  async processDocument(documentText, documentType = 'general') {
-    try {
-      if (!documentText || documentText.trim().length === 0) {
-        throw new Error('Document text cannot be empty');
-      }
-      
-      const response = await aiClient.post('/api/ai/process-document', {
-        document_text: documentText,
-        document_type: documentType
-      });
-      
-      return response.data;
-    } catch (error) {
-      console.error('Document processing error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to process document');
-    }
-  },
-
-  async extractPolicyData(documentText) {
-    try {
-      return await this.processDocument(documentText, 'policy');
-    } catch (error) {
-      console.error('Policy extraction error:', error);
-      throw error;
-    }
-  },
-
-  async extractClaimData(documentText) {
-    try {
-      return await this.processDocument(documentText, 'claim');
-    } catch (error) {
-      console.error('Claim extraction error:', error);
-      throw error;
-    }
-  }
-};
-
-// AI Service Health and Status
+/**
+ * Health check service
+ */
 export const aiHealthService = {
   async checkHealth() {
     try {
-      const response = await aiClient.get('/api/ai/health');
-      return response.data;
+      const baseUrl = await resolveAiBaseUrl();
+      const response = await fetch(`${baseUrl}/health`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          status: 'healthy',
+          service: 'AI Service',
+          baseUrl: baseUrl,
+          details: data
+        };
+      } else {
+        throw new Error(`Health check failed: ${response.status}`);
+      }
     } catch (error) {
-      console.error('AI health check error:', error);
       return {
-        ai_service_healthy: false,
-        overall_status: 'error',
+        status: 'unhealthy',
+        service: 'AI Service',
         error: error.message
       };
     }
-  },
-
-  async getStatus() {
-    try {
-      const response = await aiClient.get('/api/ai/status');
-      return response.data;
-    } catch (error) {
-      console.error('AI status error:', error);
-      throw new Error('Failed to get AI service status');
-    }
-  },
-
-  async getCapabilities() {
-    try {
-      const response = await aiClient.get('/api/ai/capabilities');
-      return response.data;
-    } catch (error) {
-      console.error('AI capabilities error:', error);
-      throw new Error('Failed to get AI capabilities');
-    }
   }
 };
 
-// Utility functions
-export const aiUtils = {
-  formatRiskScore(score) {
-    if (typeof score !== 'number') return 'Unknown';
-    
-    if (score < 0.3) return 'Low';
-    if (score < 0.7) return 'Medium';
-    return 'High';
-  },
+/**
+ * Get current AI service base URL
+ */
+export function getAiServiceBaseUrl() {
+  return currentAiBaseUrl;
+}
 
-  formatFraudScore(score) {
-    if (typeof score !== 'number') return 'Unknown';
-    
-    if (score < 0.2) return 'Very Low';
-    if (score < 0.4) return 'Low';
-    if (score < 0.6) return 'Medium';
-    if (score < 0.8) return 'High';
-    return 'Very High';
-  },
+/**
+ * Set AI service base URL override
+ */
+export function setAiServiceBaseUrl(url) {
+  currentAiBaseUrl = url;
+  console.log(`🔧 AI Service base URL override: ${url}`);
+}
 
-  formatSentiment(sentiment) {
-    const sentimentMap = {
-      positive: 'Positive',
-      negative: 'Negative',
-      neutral: 'Neutral'
-    };
-    return sentimentMap[sentiment] || 'Unknown';
-  },
-
-  getRecommendationColor(priority) {
-    const colorMap = {
-      low: 'green',
-      medium: 'yellow',
-      high: 'red'
-    };
-    return colorMap[priority] || 'gray';
-  }
-};
-
-// Legacy support for existing code
-export const analyzePolicy = textAnalysisService.analyzeText;
-export const assessRisk = riskAssessmentService.assessRisk;
-
-// Default export with all services
+// Default export for compatibility
 export default {
   chat: chatService,
-  textAnalysis: textAnalysisService,
-  riskAssessment: riskAssessmentService,
-  claimAnalysis: claimAnalysisService,
-  documentProcessing: documentProcessingService,
-  health: aiHealthService,
-  utils: aiUtils
+  health: aiHealthService
 };

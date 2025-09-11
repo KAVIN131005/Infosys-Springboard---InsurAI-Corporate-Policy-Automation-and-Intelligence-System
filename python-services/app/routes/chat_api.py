@@ -6,6 +6,12 @@ import logging
 import json
 import datetime
 import re
+import os
+
+try:
+    import httpx
+except Exception:
+    httpx = None
 
 logger = logging.getLogger(__name__)
 
@@ -391,12 +397,115 @@ async def _generate_intelligent_response(
     # Personalize based on conversation history
     if len(conversation["messages"]) > 2:
         response_prefix += "As we discussed earlier, "
-    
+
+    # Compose prompt for LLM if configured
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    gemini_model = os.environ.get("GEMINI_MODEL", "text-bison@001")
+
+    final_response_text = response_prefix + base_response["response"]
+    suggested = base_response["actions"]
+    confidence = base_response["confidence"]
+    requires_human = base_response.get("requires_human", False)
+
+    # If httpx available and a GEMINI_API_KEY is set, try calling the model
+    if gemini_api_key and httpx is not None:
+        try:
+            model_output = await _call_gemini_model(
+                message=message,
+                intent=intent,
+                conversation=conversation,
+                analysis=analysis,
+                api_key=gemini_api_key,
+                model=gemini_model
+            )
+
+            # If model returned a response use it
+            if model_output and isinstance(model_output, dict):
+                final_response_text = model_output.get("response", final_response_text)
+                suggested = model_output.get("suggested_actions", suggested)
+                # If model returns a confidence score use it
+                confidence = model_output.get("confidence", confidence)
+                requires_human = model_output.get("requires_human", requires_human)
+        except Exception as e:
+            logger.warning(f"Gemini model call failed, using fallback response: {str(e)}")
+
     return {
-        "response": response_prefix + base_response["response"],
-        "suggested_actions": base_response["actions"],
-        "confidence": base_response["confidence"],
-        "requires_human": base_response.get("requires_human", False)
+        "response": final_response_text,
+        "suggested_actions": suggested,
+        "confidence": confidence,
+        "requires_human": requires_human
+    }
+
+
+async def _call_gemini_model(message: str, intent: str, conversation: Dict[str, Any], analysis: Dict[str, Any], api_key: str, model: str) -> Dict[str, Any]:
+    """Call Gemini/Generative API to generate a response. Uses API key from env as query param.
+    This helper does not store the key and will fall back on internal logic if the call fails.
+    """
+    # Build a simple prompt that includes intent and short conversation context
+    context_excerpt = "\n".join([m.get("message", "") for m in conversation.get("messages", [])[-6:]])
+    prompt = (
+        f"You are an AI insurance assistant. The detected intent is: {intent}.\n"
+        f"User message: {message}\n"
+        f"Conversation context: {context_excerpt}\n"
+        f"NLP analysis: {json.dumps(analysis)[:1000]}\n"
+        "Provide a concise helpful response, suggested next actions as a JSON array, and a confidence score between 0 and 1."
+    )
+
+    # Google Generative API v1beta2 style endpoint (key passed as query param)
+    url = f"https://generativelanguage.googleapis.com/v1beta2/models/{model}:generateText"
+    params = {"key": api_key}
+    payload = {
+        "prompt": {"text": prompt},
+        "temperature": 0.2,
+        "maxOutputTokens": 512
+    }
+
+    # Async HTTP call
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(url, params=params, json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+
+    # Parse response: support common shapes
+    # Google generative responses often contain 'candidates' with 'output' or 'content'
+    text_out = None
+    if isinstance(data, dict):
+        # Try typical shapes
+        if "candidates" in data and isinstance(data["candidates"], list) and data["candidates"]:
+            candidate = data["candidates"][0]
+            text_out = candidate.get("content") or candidate.get("output") or candidate.get("text")
+        elif "output" in data and isinstance(data["output"], dict):
+            # newer APIs may return output->text
+            out = data["output"].get("text") or data["output"].get("content")
+            text_out = out
+        elif "result" in data and isinstance(data["result"], dict):
+            text_out = data["result"].get("content") or data["result"].get("text")
+
+    if not text_out:
+        # Last-resort: stringify the response
+        text_out = json.dumps(data)[:2000]
+
+    # Try to extract suggested actions and confidence from model output using a simple heuristic
+    # Expect model to optionally return JSON-like suggestions after a separator
+    suggested_actions = []
+    confidence = 0.0
+
+    # Look for JSON in text_out
+    try:
+        # Find a JSON substring
+        json_match = re.search(r"\{.*\}", text_out, re.DOTALL)
+        if json_match:
+            parsed = json.loads(json_match.group(0))
+            suggested_actions = parsed.get("suggested_actions") or parsed.get("suggestions") or []
+            confidence = parsed.get("confidence", confidence)
+    except Exception:
+        # ignore parse errors
+        pass
+
+    return {
+        "response": text_out,
+        "suggested_actions": suggested_actions,
+        "confidence": confidence
     }
 
 def _analyze_emotion_indicators(message: str) -> Dict[str, Any]:
