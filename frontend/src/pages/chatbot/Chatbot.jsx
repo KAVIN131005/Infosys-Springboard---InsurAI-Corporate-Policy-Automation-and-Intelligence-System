@@ -25,12 +25,15 @@ const Chatbot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [aiProvider, setAiProvider] = useState('Standard');
+  const [chatMode, setChatMode] = useState('unknown');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const { user } = useAuth();
 
   useEffect(() => {
     checkAIServiceHealth();
+    checkChatMode();
     loadConversationHistory();
   }, []);
 
@@ -49,11 +52,15 @@ const Chatbot = () => {
       setConnectionStatus('checking');
       const healthStatus = await aiHealthService.checkHealth();
       
-      const isHealthy = healthStatus?.status === 'healthy' || 
-                       healthStatus?.ai_service_healthy === true;
+      const isHealthy = healthStatus?.status === 'healthy';
       
       setIsConnected(isHealthy);
       setConnectionStatus(isHealthy ? 'connected' : 'error');
+      setAiProvider(healthStatus?.ai_provider || 'Standard');
+      
+      if (healthStatus.gemini_status) {
+        console.log(`🧠 Gemini API Status: ${healthStatus.gemini_status}`);
+      }
     } catch (error) {
       console.error('Health check failed:', error);
       setIsConnected(false);
@@ -61,19 +68,38 @@ const Chatbot = () => {
     }
   };
 
+  const checkChatMode = async () => {
+    try {
+      const modeData = await aiHealthService.getChatMode();
+      setChatMode(modeData.mode || 'unknown');
+      
+      if (modeData.gemini_working) {
+        console.log('🚀 Gemini AI is active and working!');
+      } else {
+        console.log('🎭 Running in fallback mode');
+      }
+    } catch (error) {
+      console.error('Chat mode check failed:', error);
+      setChatMode('error');
+    }
+  };
+
   const setWelcomeMessage = () => {
     const welcomeMessage = {
       id: 'welcome',
-      text: `👋 Welcome to InsurAI! I'm your personal insurance assistant.
+      text: `👋 Welcome to InsurAI! I'm your advanced AI insurance assistant powered by Google Gemini.
 
 I can help you with:
-• 🚗 Auto Insurance - Claims, coverage, quotes
-• 🏥 Health Insurance - Benefits, claims, network providers  
-• 🏠 Home Insurance - Property protection, claims
-• ❤️ Life Insurance - Beneficiaries, coverage options
-• 📋 Claims Processing - File, track, document requirements
-• 💳 Billing & Payments - Due dates, autopay, methods
-• 📞 Customer Support - Contact info, appointments
+• 🚗 Auto Insurance - Claims, coverage, quotes, accident reporting
+• 🏥 Health Insurance - Benefits, claims, network providers, prescriptions
+• 🏠 Home Insurance - Property protection, claims, natural disasters
+• ❤️ Life Insurance - Beneficiaries, coverage options, policy types
+• 📋 Claims Processing - File, track, upload documents, get updates
+• 💳 Billing & Payments - Due dates, autopay, payment methods, history
+• 🆘 Emergency Support - 24/7 assistance, immediate help
+• 📞 Customer Support - Contact info, appointments, escalations
+
+${chatMode === 'gemini' ? '🧠 AI Mode: Enhanced with Google Gemini for intelligent, context-aware responses!' : '🎭 Demo Mode: Template-based responses'}
 
 What can I help you with today?`,
       sender: 'bot',
@@ -82,7 +108,8 @@ What can I help you with today?`,
         "File an insurance claim",
         "Check my policy coverage", 
         "Get a quote",
-        "Make a payment"
+        "Make a payment",
+        "Emergency assistance"
       ]
     };
     
@@ -141,7 +168,9 @@ What can I help you with today?`,
         timestamp: new Date().toISOString(),
         confidence: response.confidence,
         intent: response.intent,
-        suggestions: response.suggestions || []
+        suggestions: response.suggestions || [],
+        aiProvider: response.aiProvider,
+        requiresHuman: response.requiresHuman
       };
 
       const finalMessages = [...newMessages, botMessage];
@@ -288,12 +317,16 @@ What can I help you with today?`,
         connectionStatus === 'checking' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'
       }`} />
       <span>
-        {connectionStatus === 'connected' ? 'Online' : 
+        {connectionStatus === 'connected' ? 
+          `Online • ${aiProvider}${chatMode === 'gemini' ? ' • Gemini AI' : ''}` : 
          connectionStatus === 'checking' ? 'Connecting...' : 'Offline'}
       </span>
       {connectionStatus === 'error' && (
         <button 
-          onClick={checkAIServiceHealth}
+          onClick={() => {
+            checkAIServiceHealth();
+            checkChatMode();
+          }}
           className="text-blue-600 hover:text-blue-800 ml-1"
         >
           <RefreshCw className="w-3 h-3" />

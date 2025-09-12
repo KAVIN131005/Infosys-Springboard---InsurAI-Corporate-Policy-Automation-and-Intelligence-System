@@ -9,6 +9,7 @@ from pathlib import Path
 # Add the app directory to Python path
 sys.path.append(str(Path(__file__).parent))
 
+from routes.complete_chat_api import router as complete_chat_router
 from routes.document_api import router as document_router
 from routes.nlp_api import router as nlp_router
 from routes.risk_api import router as risk_router
@@ -57,6 +58,7 @@ async def global_exception_handler(request, exc):
     )
 
 # Include routers with prefixes
+app.include_router(complete_chat_router, prefix="/api/chat", tags=["Gemini Chatbot"])
 app.include_router(document_router, prefix="/api/document", tags=["Document Processing"])
 app.include_router(nlp_router, prefix="/api/nlp", tags=["Natural Language Processing"])
 app.include_router(risk_router, prefix="/api/risk", tags=["Risk Assessment"])
