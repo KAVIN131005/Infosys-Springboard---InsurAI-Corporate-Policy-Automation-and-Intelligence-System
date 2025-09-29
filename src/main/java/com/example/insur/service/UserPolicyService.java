@@ -6,6 +6,7 @@ import com.example.insur.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@Slf4j
 public class UserPolicyService {
 
     @Autowired
@@ -83,19 +85,25 @@ public class UserPolicyService {
             // Age check: require age between 18 and 65 for auto-approval
             boolean ageOkay = request.getAge() != null && request.getAge() >= 18 && request.getAge() <= 65;
 
-            // NEW LOGIC: LOW/MEDIUM risk = auto-approve (if other checks pass), HIGH risk = admin approval required
+            // UPDATED LOGIC: HIGH risk (>70) = auto-approve, LOW/MEDIUM risk also auto-approve
             boolean policyRequiresApproval = Boolean.TRUE.equals(policy.getRequiresApproval());
             boolean isHighRisk = "HIGH".equals(riskLevel) || riskScore.compareTo(new BigDecimal("70")) >= 0;
             boolean isLowOrMediumRisk = "LOW".equals(riskLevel) || "MEDIUM".equals(riskLevel) || riskScore.compareTo(new BigDecimal("70")) < 0;
 
-            if (!policyRequiresApproval && isLowOrMediumRisk && financialOkay && ageOkay) {
-                // AUTO-APPROVE: LOW or MEDIUM risk with good financials and age
+            // Auto-approve ALL risk levels if other conditions are met
+            if (!policyRequiresApproval && (isLowOrMediumRisk || isHighRisk) && financialOkay && ageOkay) {
+                // AUTO-APPROVE: Any risk level with good financials and age
                 userPolicy.setStatus("ACTIVE");
                 userPolicy.setStartDate(LocalDate.now());
                 userPolicy.setEndDate(LocalDate.now().plusYears(1));
                 userPolicy.setNextPaymentDate(LocalDate.now().plusMonths(1));
                 userPolicy.setPaymentStatus("CURRENT");
-                userPolicy.setApprovalNotes("Auto-approved by AI - Risk Level: " + riskLevel + ", Score: " + riskScore);
+                
+                if (isHighRisk) {
+                    userPolicy.setApprovalNotes("Auto-approved by AI - High Risk Profile Accepted (" + riskLevel + ", Score: " + riskScore + ")");
+                } else {
+                    userPolicy.setApprovalNotes("Auto-approved by AI - Risk Level: " + riskLevel + ", Score: " + riskScore);
+                }
 
                 // Create first payment record
                 paymentService.createPremiumPayment(userPolicy);
@@ -107,10 +115,9 @@ public class UserPolicyService {
                 notificationService.sendPolicyAutoApprovedNotification(userPolicy);
                 
             } else {
-                // ADMIN APPROVAL REQUIRED: HIGH risk OR failed financial/age checks OR policy requires manual approval
+                // ADMIN APPROVAL REQUIRED: Only for failed financial/age checks OR policy requires manual approval
                 userPolicy.setStatus("PENDING_APPROVAL");
                 String reason = "";
-                if (isHighRisk) reason += "High risk (" + riskLevel + ", score: " + riskScore + "). ";
                 if (!financialOkay) reason += "Financial check failed. ";
                 if (!ageOkay) reason += "Age outside auto-approval range. ";
                 if (policyRequiresApproval) reason += "Policy requires manual approval. ";
@@ -124,8 +131,50 @@ public class UserPolicyService {
                 notificationService.sendPolicyPendingApprovalNotification(userPolicy);
             }
         } catch (Exception e) {
-            userPolicy.setStatus("PENDING_APPROVAL");
-            userPolicy.setAiAssessment("AI assessment failed: " + e.getMessage());
+            // AI service failed - use fallback risk assessment and auto-approve
+            log.warn("AI service failed, using fallback risk assessment: {}", e.getMessage());
+            
+            // Calculate basic risk score based on age and occupation
+            BigDecimal fallbackRiskScore = calculateBasicRiskScore(request);
+            userPolicy.setRiskScore(fallbackRiskScore);
+            userPolicy.setAiAssessment("AI service unavailable - Using fallback assessment. Risk Score: " + fallbackRiskScore);
+            
+            // Financial and age checks
+            boolean financialOkay = true; // Default to okay if salary not provided
+            if (request.getAnnualSalary() != null) {
+                try {
+                    java.math.BigDecimal monthlySalary = request.getAnnualSalary().divide(new java.math.BigDecimal("12"));
+                    financialOkay = userPolicy.getMonthlyPremium().compareTo(monthlySalary) <= 0;
+                } catch (Exception ex) {
+                    financialOkay = true; // Default to okay if calculation fails
+                }
+            }
+            boolean ageOkay = request.getAge() != null && request.getAge() >= 18 && request.getAge() <= 100;
+            
+            // Auto-approve even with AI service down
+            if (financialOkay && ageOkay) {
+                userPolicy.setStatus("ACTIVE");
+                userPolicy.setStartDate(LocalDate.now());
+                userPolicy.setEndDate(LocalDate.now().plusYears(1));
+                userPolicy.setNextPaymentDate(LocalDate.now().plusMonths(1));
+                userPolicy.setPaymentStatus("CURRENT");
+                userPolicy.setApprovalNotes("Auto-approved with fallback assessment - AI service temporarily unavailable. Risk Score: " + fallbackRiskScore);
+                
+                // Create first payment record
+                paymentService.createPremiumPayment(userPolicy);
+                
+                // Save before notifications
+                userPolicy = userPolicyRepository.save(userPolicy);
+                
+                // Send notifications
+                notificationService.sendPolicyAutoApprovedNotification(userPolicy);
+            } else {
+                userPolicy.setStatus("PENDING_APPROVAL");
+                userPolicy.setApprovalNotes("Pending admin review: AI service unavailable and failed basic checks");
+                
+                userPolicy = userPolicyRepository.save(userPolicy);
+                notificationService.sendPolicyPendingApprovalNotification(userPolicy);
+            }
         }
 
         userPolicy = userPolicyRepository.save(userPolicy);
@@ -343,20 +392,27 @@ public class UserPolicyService {
 
     // Calculate user risk score based on multiple factors
     public BigDecimal calculateUserRiskScore(PolicyApplicationRequest request) {
+        return calculateBasicRiskScore(request);
+    }
+
+    // Basic risk score calculation for fallback when AI service is down
+    private BigDecimal calculateBasicRiskScore(PolicyApplicationRequest request) {
         BigDecimal baseScore = new BigDecimal("50"); // Base score
         
         // Age factor
-        if (request.getAge() < 25) baseScore = baseScore.add(new BigDecimal("20"));
-        else if (request.getAge() > 65) baseScore = baseScore.add(new BigDecimal("30"));
-        else if (request.getAge() >= 25 && request.getAge() <= 45) baseScore = baseScore.subtract(new BigDecimal("10"));
+        if (request.getAge() != null) {
+            if (request.getAge() < 25) baseScore = baseScore.add(new BigDecimal("20"));
+            else if (request.getAge() > 65) baseScore = baseScore.add(new BigDecimal("30"));
+            else if (request.getAge() >= 25 && request.getAge() <= 45) baseScore = baseScore.subtract(new BigDecimal("10"));
+        }
         
         // Occupation factor
         if (request.getOccupation() != null) {
             String occupation = request.getOccupation().toLowerCase();
             if (occupation.contains("doctor") || occupation.contains("engineer") || occupation.contains("teacher")) {
                 baseScore = baseScore.subtract(new BigDecimal("10")); // Low risk occupations
-            } else if (occupation.contains("driver") || occupation.contains("construction") || occupation.contains("pilot")) {
-                baseScore = baseScore.add(new BigDecimal("15")); // High risk occupations
+            } else if (occupation.contains("driver") || occupation.contains("construction") || occupation.contains("pilot") || occupation.contains("race")) {
+                baseScore = baseScore.add(new BigDecimal("25")); // High risk occupations
             }
         }
         

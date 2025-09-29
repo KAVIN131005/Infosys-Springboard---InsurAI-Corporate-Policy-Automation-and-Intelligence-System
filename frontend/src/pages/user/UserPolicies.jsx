@@ -70,35 +70,145 @@ const UserPolicies = () => {
       {/* User's Applied Policies Section */}
       {userPolicies.length > 0 && (
         <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">📄 Your Policy Applications</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">📄 Your Policy Applications & Active Policies</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userPolicies.slice(0, 3).map((userPolicy) => (
-              <div key={userPolicy.id} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900">{userPolicy.policyName}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    userPolicy.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                    userPolicy.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                    userPolicy.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {userPolicy.status}
-                  </span>
+            {userPolicies.map((userPolicy) => {
+              const getStatusInfo = (status) => {
+                switch(status) {
+                  case 'ACTIVE':
+                    return { color: 'bg-green-100 text-green-800', icon: '✅', label: 'ACTIVE' };
+                  case 'PENDING_APPROVAL':
+                    return { color: 'bg-yellow-100 text-yellow-800', icon: '⏳', label: 'PENDING APPROVAL' };
+                  case 'APPLIED':
+                    return { color: 'bg-blue-100 text-blue-800', icon: '📋', label: 'APPLIED' };
+                  case 'REJECTED':
+                    return { color: 'bg-red-100 text-red-800', icon: '❌', label: 'REJECTED' };
+                  case 'CANCELLED':
+                    return { color: 'bg-gray-100 text-gray-800', icon: '🚫', label: 'CANCELLED' };
+                  case 'EXPIRED':
+                    return { color: 'bg-orange-100 text-orange-800', icon: '⚠️', label: 'EXPIRED' };
+                  default:
+                    return { color: 'bg-gray-100 text-gray-800', icon: '❓', label: status || 'UNKNOWN' };
+                }
+              };
+              
+              const statusInfo = getStatusInfo(userPolicy.status);
+              
+              return (
+                <div key={userPolicy.id} className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                  userPolicy.status === 'ACTIVE' ? 'bg-green-50 border-green-200' :
+                  userPolicy.status === 'PENDING_APPROVAL' ? 'bg-yellow-50 border-yellow-200' :
+                  userPolicy.status === 'REJECTED' ? 'bg-red-50 border-red-200' :
+                  'bg-blue-50 border-blue-200'
+                }`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-900 text-sm">
+                      {userPolicy.policy?.name || userPolicy.policyName || 'Policy Application'}
+                    </h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${statusInfo.color}`}>
+                      <span>{statusInfo.icon}</span>
+                      <span>{statusInfo.label}</span>
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex justify-between">
+                      <span>Type:</span>
+                      <span className="font-medium">{userPolicy.policy?.type || userPolicy.policyType || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Premium:</span>
+                      <span className="font-semibold text-blue-600">
+                        {formatCurrency(userPolicy.monthlyPremium)}/month
+                      </span>
+                    </div>
+                    {userPolicy.status === 'ACTIVE' && (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Coverage:</span>
+                          <span className="font-medium text-green-600">
+                            {formatCurrency(userPolicy.policy?.coverage)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Active Since:</span>
+                          <span className="font-medium">
+                            {userPolicy.startDate ? new Date(userPolicy.startDate).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Next Payment:</span>
+                          <span className="font-medium">
+                            {userPolicy.nextPaymentDate ? new Date(userPolicy.nextPaymentDate).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    {userPolicy.status === 'PENDING_APPROVAL' && (
+                      <div className="mt-2 p-2 bg-yellow-100 rounded text-xs">
+                        <p className="font-medium text-yellow-800">🔍 Under Review</p>
+                        <p className="text-yellow-700">Your application is being reviewed by our team. You'll be notified once approved.</p>
+                        {userPolicy.riskScore && (
+                          <p className="text-yellow-700 mt-1">Risk Score: {userPolicy.riskScore}</p>
+                        )}
+                      </div>
+                    )}
+                    {userPolicy.status === 'REJECTED' && userPolicy.approvalNotes && (
+                      <div className="mt-2 p-2 bg-red-100 rounded text-xs">
+                        <p className="font-medium text-red-800">❌ Rejection Reason</p>
+                        <p className="text-red-700">{userPolicy.approvalNotes}</p>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Applied:</span>
+                      <span>{userPolicy.createdAt ? new Date(userPolicy.createdAt).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Action buttons for different statuses */}
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    {userPolicy.status === 'ACTIVE' && (
+                      <div className="flex space-x-2">
+                        <Link
+                          to={`/user/claims?policyId=${userPolicy.id}`}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-1 px-2 rounded text-xs font-medium transition-colors"
+                        >
+                          📝 File Claim
+                        </Link>
+                        <button className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-xs font-medium transition-colors">
+                          📄 View Policy
+                        </button>
+                      </div>
+                    )}
+                    {userPolicy.status === 'PENDING_APPROVAL' && (
+                      <div className="text-center">
+                        <button 
+                          onClick={() => alert('🕒 Your application is currently under review by our team. You will receive an email notification once the review is complete.')}
+                          className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded text-xs font-medium transition-colors"
+                        >
+                          🕒 Check Status
+                        </button>
+                      </div>
+                    )}
+                    {userPolicy.status === 'REJECTED' && (
+                      <div className="text-center">
+                        <Link
+                          to="/user/policies"
+                          className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-xs font-medium transition-colors"
+                        >
+                          🔄 Apply for Other Policies
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{userPolicy.policyType}</p>
-                <p className="text-lg font-semibold text-blue-600">
-                  {formatCurrency(userPolicy.monthlyPremium)}/month
-                </p>
-                <p className="text-sm text-gray-500">
-                  Applied: {new Date(userPolicy.applicationDate).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          {userPolicies.length > 3 && (
+          {userPolicies.length > 6 && (
             <div className="mt-4 text-center">
-              <Link to="/user/claims" className="text-blue-600 hover:text-blue-800 text-sm">
-                View All Applications
+              <Link to="/user/dashboard" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                View All Policies & Applications →
               </Link>
             </div>
           )}

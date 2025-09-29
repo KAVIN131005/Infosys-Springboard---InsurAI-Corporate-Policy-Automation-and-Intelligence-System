@@ -87,7 +87,8 @@ export const getAvailablePolicies = async () => {
 // Get pending policies for admin approval
 export const getPendingPolicies = async () => {
   try {
-    const response = await policyClient.get('/api/policies/pending');
+    // Use user-policies endpoint for policy applications
+    const response = await policyClient.get('/api/user-policies/pending-approvals');
     return response.data;
   } catch (error) {
     console.error('Get pending policies error:', error);
@@ -96,10 +97,12 @@ export const getPendingPolicies = async () => {
 };
 
 // Admin approve/reject policies
-export const approvePolicy = async (policyId) => {
+export const approvePolicy = async (userPolicyId, notes = '') => {
   try {
-    // Backend expects a PUT for approve
-    const response = await policyClient.put(`/api/policies/${policyId}/approve`);
+    // Use user-policies endpoint for policy applications
+    const response = await policyClient.post(`/api/user-policies/${userPolicyId}/approve`, null, {
+      params: { notes }
+    });
     return response.data;
   } catch (error) {
     console.error('Approve policy error:', error);
@@ -107,11 +110,11 @@ export const approvePolicy = async (policyId) => {
   }
 };
 
-export const rejectPolicy = async (policyId, reason) => {
+export const rejectPolicy = async (userPolicyId, reason) => {
   try {
-    // Backend expects a PUT with the reason in the request body
-    const response = await policyClient.put(`/api/policies/${policyId}/reject`, reason, {
-      headers: { 'Content-Type': 'text/plain' }
+    // Use user-policies endpoint for policy applications
+    const response = await policyClient.post(`/api/user-policies/${userPolicyId}/reject`, null, {
+      params: { reason }
     });
     return response.data;
   } catch (error) {

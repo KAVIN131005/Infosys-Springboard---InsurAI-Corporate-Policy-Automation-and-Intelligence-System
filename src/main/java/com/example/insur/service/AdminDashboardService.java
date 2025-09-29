@@ -5,12 +5,15 @@ import com.example.insur.dto.UserDto;
 import com.example.insur.dto.PolicyDto;
 import com.example.insur.dto.ClaimDto;
 import com.example.insur.dto.NotificationDto;
+import com.example.insur.dto.UserPolicyDto;
 import com.example.insur.repository.UserRepository;
 import com.example.insur.repository.PolicyRepository;
 import com.example.insur.repository.ClaimRepository;
+import com.example.insur.repository.UserPolicyRepository;
 import com.example.insur.entity.User;
 import com.example.insur.entity.Policy;
 import com.example.insur.entity.Claim;
+import com.example.insur.entity.UserPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +32,8 @@ public class AdminDashboardService {
     private final UserRepository userRepository;
     private final PolicyRepository policyRepository;
     private final ClaimRepository claimRepository;
+    private final UserPolicyRepository userPolicyRepository;
+    private final UserPolicyService userPolicyService;
 
     public AdminStatsDto getAdminStats() {
         AdminStatsDto stats = new AdminStatsDto();
@@ -250,6 +255,117 @@ public class AdminDashboardService {
         dto.setRequiresManualReview(claim.getRequiresManualReview());
         dto.setCreatedAt(claim.getCreatedAt());
         dto.setUpdatedAt(claim.getUpdatedAt());
+        return dto;
+    }
+
+    // User Policy Management Methods
+    public List<UserPolicyDto> getPendingUserPolicies() {
+        return userPolicyService.getPendingApplications();
+    }
+
+    public UserPolicyDto approveUserPolicy(Long userPolicyId, String notes) {
+        return userPolicyService.approveApplication(userPolicyId, notes != null ? notes : "Approved by admin");
+    }
+
+    public UserPolicyDto rejectUserPolicy(Long userPolicyId, String reason) {
+        return userPolicyService.rejectApplication(userPolicyId, reason);
+    }
+
+    public List<UserPolicyDto> getAllUserPolicies() {
+        List<UserPolicy> allUserPolicies = userPolicyRepository.findAll();
+        return allUserPolicies.stream()
+                .map(this::convertUserPolicyToDto)
+                .collect(Collectors.toList());
+    }
+
+    public Map<String, Object> getUserPolicyStatistics() {
+        List<UserPolicy> allUserPolicies = userPolicyRepository.findAll();
+        
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Count by status
+        Map<String, Long> byStatus = allUserPolicies.stream()
+                .collect(Collectors.groupingBy(
+                    up -> up.getStatus() != null ? up.getStatus() : "Unknown",
+                    Collectors.counting()
+                ));
+        stats.put("byStatus", byStatus);
+        
+        // Count by risk level
+        Map<String, Long> byRiskLevel = allUserPolicies.stream()
+                .filter(up -> up.getRiskScore() != null)
+                .collect(Collectors.groupingBy(
+                    up -> {
+                        double score = up.getRiskScore().doubleValue();
+                        if (score < 30) return "LOW";
+                        if (score < 70) return "MEDIUM";
+                        return "HIGH";
+                    },
+                    Collectors.counting()
+                ));
+        stats.put("byRiskLevel", byRiskLevel);
+        
+        // Total statistics
+        stats.put("total", allUserPolicies.size());
+        stats.put("pending", byStatus.getOrDefault("PENDING_APPROVAL", 0L));
+        stats.put("active", byStatus.getOrDefault("ACTIVE", 0L));
+        stats.put("rejected", byStatus.getOrDefault("REJECTED", 0L));
+        
+        // Auto-approval rate
+        long autoApproved = allUserPolicies.stream()
+                .filter(up -> up.getApprovalNotes() != null && up.getApprovalNotes().contains("Auto-approved"))
+                .count();
+        long totalProcessed = allUserPolicies.stream()
+                .filter(up -> "ACTIVE".equals(up.getStatus()) || "REJECTED".equals(up.getStatus()))
+                .count();
+        
+        if (totalProcessed > 0) {
+            stats.put("autoApprovalRate", (double) autoApproved / totalProcessed * 100);
+        } else {
+            stats.put("autoApprovalRate", 0.0);
+        }
+        
+        return stats;
+    }
+
+    private UserPolicyDto convertUserPolicyToDto(UserPolicy userPolicy) {
+        UserPolicyDto dto = new UserPolicyDto();
+        dto.setId(userPolicy.getId());
+        dto.setStatus(userPolicy.getStatus());
+        dto.setStartDate(userPolicy.getStartDate());
+        dto.setEndDate(userPolicy.getEndDate());
+        dto.setMonthlyPremium(userPolicy.getMonthlyPremium());
+        dto.setTotalPremiumPaid(userPolicy.getTotalPremiumPaid());
+        dto.setNextPaymentDate(userPolicy.getNextPaymentDate());
+        dto.setPaymentStatus(userPolicy.getPaymentStatus());
+        dto.setApprovalNotes(userPolicy.getApprovalNotes());
+        dto.setRiskScore(userPolicy.getRiskScore());
+        dto.setAiAssessment(userPolicy.getAiAssessment());
+        dto.setApplicationData(userPolicy.getApplicationData());
+        dto.setCreatedAt(userPolicy.getCreatedAt());
+        dto.setUpdatedAt(userPolicy.getUpdatedAt());
+        
+        // Set related entities
+        if (userPolicy.getUser() != null) {
+            UserDto userDto = new UserDto();
+            userDto.setId(userPolicy.getUser().getId());
+            userDto.setUsername(userPolicy.getUser().getUsername());
+            userDto.setEmail(userPolicy.getUser().getEmail());
+            userDto.setFirstName(userPolicy.getUser().getFirstName());
+            userDto.setLastName(userPolicy.getUser().getLastName());
+            dto.setUser(userDto);
+        }
+        
+        if (userPolicy.getPolicy() != null) {
+            PolicyDto policyDto = new PolicyDto();
+            policyDto.setId(userPolicy.getPolicy().getId());
+            policyDto.setName(userPolicy.getPolicy().getName());
+            policyDto.setType(userPolicy.getPolicy().getType());
+            policyDto.setSubType(userPolicy.getPolicy().getSubType());
+            policyDto.setCoverage(userPolicy.getPolicy().getCoverage());
+            dto.setPolicy(policyDto);
+        }
+        
         return dto;
     }
 }

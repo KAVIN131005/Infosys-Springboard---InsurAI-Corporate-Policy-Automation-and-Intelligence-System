@@ -9,6 +9,7 @@ import com.example.insur.dto.PolicyDto;
 import com.example.insur.dto.ClaimDto;
 import com.example.insur.dto.AdminStatsDto;
 import com.example.insur.dto.NotificationDto;
+import com.example.insur.dto.UserPolicyDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -148,5 +149,31 @@ public class AdminController {
     public ResponseEntity<Void> updateClaimStatus(@PathVariable Long id, @RequestParam String status) {
         claimService.updateClaimStatus(id, status);
         return ResponseEntity.ok().build();
+    }
+
+    // User Policy Approval Endpoints
+    @GetMapping("/user-policies/pending")
+    public ResponseEntity<List<UserPolicyDto>> getPendingUserPolicies() {
+        return ResponseEntity.ok(adminDashboardService.getPendingUserPolicies());
+    }
+
+    @PostMapping("/user-policies/{id}/approve")
+    public ResponseEntity<UserPolicyDto> approveUserPolicy(@PathVariable Long id, @RequestParam(required = false) String notes) {
+        return ResponseEntity.ok(adminDashboardService.approveUserPolicy(id, notes));
+    }
+
+    @PostMapping("/user-policies/{id}/reject")
+    public ResponseEntity<UserPolicyDto> rejectUserPolicy(@PathVariable Long id, @RequestParam String reason) {
+        return ResponseEntity.ok(adminDashboardService.rejectUserPolicy(id, reason));
+    }
+
+    @GetMapping("/user-policies/all")
+    public ResponseEntity<List<UserPolicyDto>> getAllUserPolicies() {
+        return ResponseEntity.ok(adminDashboardService.getAllUserPolicies());
+    }
+
+    @GetMapping("/user-policies/statistics")
+    public ResponseEntity<Map<String, Object>> getUserPolicyStatistics() {
+        return ResponseEntity.ok(adminDashboardService.getUserPolicyStatistics());
     }
 }

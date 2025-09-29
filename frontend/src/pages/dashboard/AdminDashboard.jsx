@@ -213,6 +213,40 @@ const AdminDashboard = () => {
         </p>
       </div>
 
+      {/* Urgent Actions & Approval Queue */}
+      <div className="mb-8">
+        <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white p-6 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">🔴 Urgent: Policy Applications Pending Approval</h2>
+              <p className="opacity-90">
+                {dashboardData.pendingPolicies || 0} user policy application{(dashboardData.pendingPolicies || 0) !== 1 ? 's' : ''} require your immediate attention
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-bold">{dashboardData.pendingPolicies || 0}</div>
+              <div className="text-sm opacity-90">Pending</div>
+            </div>
+          </div>
+          <div className="mt-4 flex space-x-3">
+            <Link
+              to="/admin/approvals"
+              className="bg-white text-red-600 px-6 py-3 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center space-x-2"
+            >
+              <span>🔍</span>
+              <span>Review Applications Now</span>
+            </Link>
+            <button
+              onClick={fetchDashboardData}
+              className="bg-red-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+            >
+              <span>🔄</span>
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
