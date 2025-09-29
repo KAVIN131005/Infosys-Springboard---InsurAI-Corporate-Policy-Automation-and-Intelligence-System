@@ -8,8 +8,9 @@ import BrokerPolicies from './pages/broker/BrokerPolicies';
 import UserPolicies from './pages/user/UserPolicies';
 import PolicyView from './pages/policy/PolicyView';
 import PolicyComparePage from './pages/policy/PolicyComparePage';
-import SubmitClaim from './pages/claim/SubmitClaim';
-import ClaimStatus from './pages/claim/ClaimStatus';
+import EnhancedSubmitClaim from './pages/claim/EnhancedSubmitClaim';
+import EnhancedClaimStatus from './pages/claim/EnhancedClaimStatus';
+import AdminClaimApproval from './pages/admin/AdminClaimApproval';
 import Chatbot from './pages/chatbot/Chatbot';
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
 import AdminApprovals from './pages/dashboard/AdminApprovals';
@@ -235,7 +236,7 @@ function AppRoutes() {
               path="/submit-claim" 
               element={
                 <ProtectedRoute>
-                  <SubmitClaim />
+                  <EnhancedSubmitClaim />
                 </ProtectedRoute>
               } 
             />
@@ -244,7 +245,7 @@ function AppRoutes() {
               path="/claim/submit" 
               element={
                 <ProtectedRoute>
-                  <SubmitClaim />
+                  <EnhancedSubmitClaim />
                 </ProtectedRoute>
               } 
             />
@@ -253,7 +254,7 @@ function AppRoutes() {
               path="/claim-status" 
               element={
                 <ProtectedRoute>
-                  <ClaimStatus />
+                  <EnhancedClaimStatus />
                 </ProtectedRoute>
               } 
             />
@@ -262,7 +263,7 @@ function AppRoutes() {
               path="/claim/status" 
               element={
                 <ProtectedRoute>
-                  <ClaimStatus />
+                  <EnhancedClaimStatus />
                 </ProtectedRoute>
               } 
             />
@@ -312,6 +313,15 @@ function AppRoutes() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/admin/claim-approvals"
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <AdminClaimApproval />
+                </ProtectedRoute>
+              }
+            />
             
             <Route 
               path="/admin/upload-policy" 
@@ -335,7 +345,7 @@ function AppRoutes() {
               path="/admin/claims" 
               element={
                 <ProtectedRoute roles={['ADMIN']}>
-                  <ClaimStatus />
+                  <EnhancedClaimStatus />
                 </ProtectedRoute>
               } 
             />
@@ -344,7 +354,7 @@ function AppRoutes() {
               path="/admin/submit-claim" 
               element={
                 <ProtectedRoute roles={['ADMIN']}>
-                  <SubmitClaim />
+                  <EnhancedSubmitClaim />
                 </ProtectedRoute>
               } 
             />
@@ -432,7 +442,7 @@ function AppRoutes() {
               path="/user/claims" 
               element={
                 <ProtectedRoute roles={['USER']}>
-                  <ClaimStatus />
+                  <EnhancedClaimStatus />
                 </ProtectedRoute>
               } 
             />
@@ -441,7 +451,7 @@ function AppRoutes() {
               path="/user/submit-claim" 
               element={
                 <ProtectedRoute roles={['USER']}>
-                  <SubmitClaim />
+                  <EnhancedSubmitClaim />
                 </ProtectedRoute>
               } 
             />

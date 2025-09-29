@@ -69,36 +69,49 @@ public class ClaimService {
             claim.setSupportingDocuments(String.join(",", request.getSupportingDocuments()));
         }
 
-        // AI Analysis
+        // Enhanced AI Analysis with Risk Assessment
         try {
             String aiAnalysis = aiOrchestrationService.analyzeClaim(request);
             claim.setAiAnalysisResult(aiAnalysis);
             
-            // Extract confidence and fraud scores from AI response
+            // Enhanced confidence and fraud risk assessment
             BigDecimal confidenceScore = extractConfidenceScore(aiAnalysis);
             BigDecimal fraudScore = extractFraudScore(aiAnalysis);
+            BigDecimal riskScore = calculateRiskScore(request, confidenceScore, fraudScore);
             
             claim.setAiConfidenceScore(confidenceScore);
             claim.setFraudScore(fraudScore);
 
-            // Auto-approve low-risk claims
-            if (fraudScore.compareTo(new BigDecimal("30")) < 0 && 
-                confidenceScore.compareTo(new BigDecimal("80")) > 0 &&
-                request.getClaimAmount().compareTo(new BigDecimal("5000")) < 0) {
-                
+            // Enhanced Auto-approval Logic: If Risk >= 90%, AI auto-approves
+            if (riskScore.compareTo(new BigDecimal("90")) >= 0) {
+                // High confidence, low fraud risk = AI Auto-Approval
                 claim.setStatus("APPROVED");
                 claim.setApprovedAmount(request.getClaimAmount());
                 claim.setAutoApproved(true);
                 claim.setRequiresManualReview(false);
+                claim.setReviewerNotes("AI Auto-Approved: Risk Score " + riskScore + "%, Confidence: " + confidenceScore + "%, Fraud Risk: " + fraudScore + "%");
+                
+                // Immediate payment processing for AI-approved claims
+                processImmediatePayment(claim);
+                
+            } else if (riskScore.compareTo(new BigDecimal("70")) >= 0) {
+                // Medium risk = Requires Admin approval
+                claim.setStatus("PENDING_ADMIN_REVIEW");
+                claim.setRequiresManualReview(true);
+                claim.setReviewerNotes("Requires Admin Review: Risk Score " + riskScore + "%, Confidence: " + confidenceScore + "%, Fraud Risk: " + fraudScore + "%");
+                
             } else {
+                // Low confidence or high fraud risk = Manual review required
                 claim.setStatus("UNDER_REVIEW");
                 claim.setRequiresManualReview(true);
+                claim.setReviewerNotes("Manual Review Required: Risk Score " + riskScore + "%, High fraud risk or low confidence detected");
             }
 
         } catch (Exception e) {
             claim.setStatus("UNDER_REVIEW");
             claim.setRequiresManualReview(true);
             claim.setAiAnalysisResult("AI analysis failed: " + e.getMessage());
+            claim.setReviewerNotes("AI analysis unavailable - manual review required");
         }
 
         claim = claimRepository.save(claim);
@@ -239,6 +252,78 @@ public class ClaimService {
         return new BigDecimal("30");
     }
 
+    /**
+     * Calculate comprehensive risk score based on AI analysis and claim details
+     */
+    private BigDecimal calculateRiskScore(ClaimSubmissionRequest request, BigDecimal confidenceScore, BigDecimal fraudScore) {
+        try {
+            // Base risk score from AI confidence (higher confidence = higher risk score)
+            BigDecimal riskScore = confidenceScore;
+            
+            // Adjust for fraud risk (higher fraud = lower risk score)
+            BigDecimal fraudPenalty = fraudScore.multiply(new BigDecimal("0.5"));
+            riskScore = riskScore.subtract(fraudPenalty);
+            
+            // Adjust for claim amount (higher amounts need more scrutiny)
+            if (request.getClaimAmount().compareTo(new BigDecimal("10000")) > 0) {
+                riskScore = riskScore.subtract(new BigDecimal("10"));
+            } else if (request.getClaimAmount().compareTo(new BigDecimal("5000")) > 0) {
+                riskScore = riskScore.subtract(new BigDecimal("5"));
+            }
+            
+            // Adjust for completeness of information
+            int completenessScore = 0;
+            if (request.getIncidentDate() != null) completenessScore += 20;
+            if (request.getIncidentLocation() != null && !request.getIncidentLocation().trim().isEmpty()) completenessScore += 15;
+            if (request.getIncidentDescription() != null && request.getIncidentDescription().length() > 50) completenessScore += 15;
+            if (request.getSupportingDocuments() != null && !request.getSupportingDocuments().isEmpty()) completenessScore += 20;
+            
+            // Scale completeness to 0-10 range and add to risk score
+            riskScore = riskScore.add(new BigDecimal(completenessScore / 10));
+            
+            // Ensure risk score is between 0 and 100
+            if (riskScore.compareTo(BigDecimal.ZERO) < 0) riskScore = BigDecimal.ZERO;
+            if (riskScore.compareTo(new BigDecimal("100")) > 0) riskScore = new BigDecimal("100");
+            
+            return riskScore;
+        } catch (Exception e) {
+            // Default to medium risk if calculation fails
+            return new BigDecimal("60");
+        }
+    }
+
+    /**
+     * Process immediate payment for AI auto-approved claims
+     */
+    private void processImmediatePayment(Claim claim) {
+        try {
+            Payment payment = new Payment();
+            payment.setUserPolicy(claim.getUserPolicy());
+            payment.setClaim(claim);
+            payment.setAmount(claim.getApprovedAmount());
+            payment.setStatus("PROCESSING");
+            payment.setType("CLAIM_AUTO_APPROVED");
+            payment.setDescription("AI Auto-Approved Claim Payment for " + claim.getClaimNumber());
+            payment.setPaymentDate(LocalDateTime.now());
+            payment.setTransactionId("AUTO_CLM_" + System.currentTimeMillis());
+            
+            // For demo purposes, mark as completed immediately
+            // In real implementation, this would integrate with payment gateway
+            payment.setStatus("COMPLETED");
+            
+            // Save the payment (assumes PaymentService has save method)
+            paymentService.processClaimPayment(payment);
+            
+            // Update claim with payment reference
+            claim.setReviewerNotes(claim.getReviewerNotes() + " | Payment processed automatically: " + payment.getTransactionId());
+            
+        } catch (Exception e) {
+            // If payment fails, update claim status but don't fail the claim
+            claim.setReviewerNotes(claim.getReviewerNotes() + " | Payment processing failed: " + e.getMessage());
+            // Could also set a flag for manual payment processing
+        }
+    }
+
     private ClaimDto convertToDto(Claim claim) {
         ClaimDto dto = new ClaimDto();
         dto.setId(claim.getId());
@@ -290,29 +375,57 @@ public class ClaimService {
     public void updateClaimStatus(Long claimId, String status) {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
-        claim.setStatus(status);
+        
+        User currentUser = userService.getCurrentUser();
+        
+        claim.setStatus(status.toUpperCase());
+        claim.setReviewedBy(currentUser);
+        claim.setReviewedAt(LocalDateTime.now());
         claim.setUpdatedAt(LocalDateTime.now());
         claimRepository.save(claim);
     }
 
-    // Simplified approval method for AdminController
+    // Enhanced approval method for AdminController
     public void approveClaim(Long claimId) {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
+        
+        User currentUser = userService.getCurrentUser();
+        
+        if (!"UNDER_REVIEW".equals(claim.getStatus())) {
+            throw new RuntimeException("Claim is not under review");
+        }
+        
         claim.setStatus("APPROVED");
         claim.setApprovedAmount(claim.getClaimAmount());
+        claim.setReviewerNotes("Manually approved by admin");
+        claim.setReviewedBy(currentUser);
+        claim.setReviewedAt(LocalDateTime.now());
         claim.setUpdatedAt(LocalDateTime.now());
+        
         claimRepository.save(claim);
-        createClaimPayment(claim);
+        
+        // Process payment for admin approved claim
+        processImmediatePayment(claim);
     }
 
-    // Simplified rejection method for AdminController
+    // Enhanced rejection method for AdminController
     public void rejectClaim(Long claimId, String reason) {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
+        
+        User currentUser = userService.getCurrentUser();
+        
+        if (!"UNDER_REVIEW".equals(claim.getStatus())) {
+            throw new RuntimeException("Claim is not under review");
+        }
+        
         claim.setStatus("REJECTED");
         claim.setRejectionReason(reason);
+        claim.setReviewedBy(currentUser);
+        claim.setReviewedAt(LocalDateTime.now());
         claim.setUpdatedAt(LocalDateTime.now());
+        
         claimRepository.save(claim);
     }
 }

@@ -12,8 +12,9 @@ const Sidebar = () => {
       // Admin sidebar: focus on system-wide controls and approvals
       return [
         { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
-        { path: '/admin/policies', label: 'Policies (Approve)', icon: '�' },
-        { path: '/admin/approvals', label: 'Approvals', icon: '✅' },
+        { path: '/admin/policies', label: 'Policies (Approve)', icon: '📋' },
+        { path: '/admin/approvals', label: 'Policy Approvals', icon: '✅' },
+        { path: '/admin/claim-approvals', label: 'Claim Approvals', icon: '🔍' },
         { path: '/analytics', label: 'Analytics', icon: '📈' },
         { path: '/chatbot', label: 'AI Assistant', icon: '🤖' },
       ];
@@ -30,8 +31,8 @@ const Sidebar = () => {
         { path: '/dashboard', label: 'Dashboard', icon: '📊' },
         { path: '/policies', label: 'Available Policies', icon: '📋' },
         { path: '/user/compare', label: 'Compare Policies', icon: '⚖️' },
-        { path: '/user/claims', label: 'My Claims', icon: '📝' },
-        { path: '/user/submit-claim', label: 'Submit Claim', icon: '✍️' },
+        { path: '/claim-status', label: 'My Claims', icon: '📝' },
+        { path: '/submit-claim', label: 'Submit Claim', icon: '✍️' },
         { path: '/user/chatbot', label: 'AI Assistant', icon: '🤖' },
       ];
     }

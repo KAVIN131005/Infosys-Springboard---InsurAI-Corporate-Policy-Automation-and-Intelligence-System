@@ -69,6 +69,36 @@ public class PaymentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Process claim payment for auto-approved claims
+     */
+    public Payment processClaimPayment(Payment payment) {
+        // Validate payment details
+        if (payment.getClaim() == null) {
+            throw new RuntimeException("Payment must be associated with a claim");
+        }
+        
+        if (payment.getAmount() == null || payment.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Payment amount must be positive");
+        }
+        
+        // Set default values if not provided
+        if (payment.getPaymentDate() == null) {
+            payment.setPaymentDate(LocalDateTime.now());
+        }
+        
+        if (payment.getStatus() == null) {
+            payment.setStatus("PROCESSING");
+        }
+        
+        if (payment.getTransactionId() == null) {
+            payment.setTransactionId("CLM_" + System.currentTimeMillis());
+        }
+        
+        // Save and return the payment
+        return paymentRepository.save(payment);
+    }
+
     private PaymentDto convertToDto(Payment payment) {
         PaymentDto dto = new PaymentDto();
         dto.setId(payment.getId());
