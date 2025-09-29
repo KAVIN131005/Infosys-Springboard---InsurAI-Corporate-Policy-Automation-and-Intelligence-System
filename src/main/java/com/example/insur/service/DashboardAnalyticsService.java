@@ -43,9 +43,11 @@ public class DashboardAnalyticsService {
         
         // Revenue analytics
         List<UserPolicy> activePolicies = userPolicyRepository.findByStatus("ACTIVE");
+        // Calculate monthly revenue in INR (multiply by 83 for USD to INR conversion)
         BigDecimal monthlyRevenue = activePolicies.stream()
                 .map(UserPolicy::getMonthlyPremium)
                 .filter(Objects::nonNull)
+                .map(premium -> premium.multiply(new BigDecimal("83")))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         dashboard.put("monthlyRevenue", monthlyRevenue);
         
@@ -104,7 +106,7 @@ public class DashboardAnalyticsService {
         }
         dashboard.put("totalClients", clients.size());
         
-        // Revenue from broker's policies
+        // Revenue from broker's policies in INR
         BigDecimal monthlyRevenue = BigDecimal.ZERO;
         for (Policy policy : brokerPolicies) {
             List<UserPolicy> activePolicies = userPolicyRepository.findByPolicy(policy).stream()
@@ -112,7 +114,8 @@ public class DashboardAnalyticsService {
                     .collect(Collectors.toList());
             for (UserPolicy up : activePolicies) {
                 if (up.getMonthlyPremium() != null) {
-                    monthlyRevenue = monthlyRevenue.add(up.getMonthlyPremium());
+                    // Convert to INR by multiplying by 83
+                    monthlyRevenue = monthlyRevenue.add(up.getMonthlyPremium().multiply(new BigDecimal("83")));
                 }
             }
         }
@@ -416,10 +419,10 @@ public class DashboardAnalyticsService {
     private Map<String, Object> getPerformanceMetrics() {
         Map<String, Object> metrics = new HashMap<>();
         
-        // Policy approval rate
+        // Policy approval rate with proper rounding
         long totalPolicies = policyRepository.count();
         long approvedPolicies = policyRepository.findByStatus("ACTIVE").size();
-        double policyApprovalRate = totalPolicies == 0 ? 0 : (double) approvedPolicies / totalPolicies * 100;
+        double policyApprovalRate = totalPolicies == 0 ? 0 : Math.round((double) approvedPolicies / totalPolicies * 100 * 10.0) / 10.0;
         metrics.put("policyApprovalRate", policyApprovalRate);
         
         // Average processing time (mock data)

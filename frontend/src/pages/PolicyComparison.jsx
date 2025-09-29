@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 const PolicyComparison = () => {
     const { user } = useAuth();
@@ -86,7 +86,7 @@ const PolicyComparison = () => {
             } else if (prev.length < 5) {
                 return [...prev, policyId];
             } else {
-                toast.warning('You can compare maximum 5 policies at once');
+                toast.error('You can compare maximum 5 policies at once');
                 return prev;
             }
         });
@@ -94,7 +94,7 @@ const PolicyComparison = () => {
 
     const comparePolicies = async () => {
         if (selectedPolicies.length < 2) {
-            toast.warning('Please select at least 2 policies to compare');
+            toast.error('Please select at least 2 policies to compare');
             return;
         }
 

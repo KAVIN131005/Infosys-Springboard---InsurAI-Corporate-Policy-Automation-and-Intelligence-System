@@ -96,7 +96,7 @@ const PolicyView = () => {
               `✅ Status: ACTIVE\n` +
               `🤖 AI Assessment: ${response.aiAssessment || 'Low risk profile detected'}\n` +
               `📅 Coverage starts: ${response.startDate}\n` +
-              `💰 Monthly Premium: $${response.monthlyPremium}\n\n` +
+              `💰 Monthly Premium: ₹${(response.monthlyPremium * 83).toLocaleString()}\n\n` +
               `You'll receive a confirmation email and policy documents shortly.`);
       } else if (response.status === 'PENDING_APPROVAL') {
         // Requires admin review
@@ -472,7 +472,7 @@ const PolicyView = () => {
             
             <div className="flex space-x-2">
               <Button
-                onClick={() => navigate(`/policies/${policy.id}`)}
+                onClick={() => navigate(`/policy/view/${policy.id}`)}
                 className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
               >
                 View Details

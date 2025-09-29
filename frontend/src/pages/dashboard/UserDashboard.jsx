@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { aiHealthService, chatService } from '../../api/aiService';
 import { getClaims } from '../../api/claimService';
@@ -11,6 +12,7 @@ import Modal from '../../components/ui/Modal';
 
 const UserDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     totalPolicies: 0,
     activePolicies: 0,
@@ -305,7 +307,7 @@ const UserDashboard = () => {
                 Quick Chat
               </Button>
               <Button 
-                onClick={() => window.location.href = '/chatbot'}
+                onClick={() => navigate('/chatbot')}
                 className="w-full"
                 disabled={dashboardData.aiStatus?.status !== 'healthy'}
               >
@@ -352,7 +354,7 @@ const UserDashboard = () => {
             </div>
             <div className="card-actions">
               <Button 
-                onClick={() => window.location.href = '/policies'} 
+                onClick={() => navigate('/policies')} 
                 variant="outline"
                 className="w-full"
               >
@@ -421,14 +423,14 @@ const UserDashboard = () => {
             </div>
             <div className="card-actions space-y-2">
               <Button 
-                onClick={() => window.location.href = '/submit-claim'} 
+                onClick={() => navigate('/submit-claim')} 
                 variant="primary"
                 className="w-full"
               >
                 Submit New Claim
               </Button>
               <Button 
-                onClick={() => window.location.href = '/claim-status'} 
+                onClick={() => navigate('/claim-status')} 
                 variant="outline"
                 className="w-full"
               >
@@ -445,7 +447,7 @@ const UserDashboard = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">⚡ Quick Actions</h3>
             <div className="quick-actions-grid grid grid-cols-2 gap-3">
               <Button 
-                onClick={() => window.location.href = '/submit-claim'}
+                onClick={() => navigate('/submit-claim')}
                 className="quick-action-btn flex flex-col items-center p-4 h-auto"
                 variant="outline"
               >
@@ -453,7 +455,7 @@ const UserDashboard = () => {
                 <span className="text-sm">Submit Claim</span>
               </Button>
               <Button 
-                onClick={() => window.location.href = '/policy-compare'}
+                onClick={() => navigate('/user/compare')}
                 className="quick-action-btn flex flex-col items-center p-4 h-auto"
                 variant="outline"
               >
@@ -461,7 +463,7 @@ const UserDashboard = () => {
                 <span className="text-sm">Compare Policies</span>
               </Button>
               <Button 
-                onClick={() => window.location.href = '/chatbot'}
+                onClick={() => navigate('/chatbot')}
                 className="quick-action-btn flex flex-col items-center p-4 h-auto"
                 variant="outline"
                 disabled={dashboardData.aiStatus?.status !== 'healthy'}
@@ -470,12 +472,12 @@ const UserDashboard = () => {
                 <span className="text-sm">AI Chat</span>
               </Button>
               <Button 
-                onClick={() => window.location.href = '/analytics'}
+                onClick={() => navigate('/dashboard')}
                 className="quick-action-btn flex flex-col items-center p-4 h-auto"
                 variant="outline"
               >
                 <span className="text-2xl mb-2">📊</span>
-                <span className="text-sm">Analytics</span>
+                <span className="text-sm">Dashboard</span>
               </Button>
             </div>
           </div>

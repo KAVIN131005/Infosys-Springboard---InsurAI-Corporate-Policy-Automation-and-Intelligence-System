@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import AdminDashboard from './pages/dashboard/CleanAdminDashboard';
@@ -155,6 +156,7 @@ const DashboardRouter = () => {
   }
 };
 
+// Role-based policy routing
 const PolicyRoutingComponent = () => {
   const { user } = useAuth();
   
@@ -225,6 +227,7 @@ function AppRoutes() {
               } 
             />
             
+            {/* Protected Routes - Policies */}
             <Route 
               path="/policies" 
               element={
@@ -252,6 +255,7 @@ function AppRoutes() {
               } 
             />
             
+            {/* Protected Routes - Claims */}
             <Route 
               path="/submit-claim" 
               element={
@@ -288,6 +292,7 @@ function AppRoutes() {
               } 
             />
             
+            {/* Protected Routes - AI Chat */}
             <Route 
               path="/chatbot" 
               element={
@@ -379,6 +384,7 @@ function AppRoutes() {
               } 
             />
             
+            {/* Analytics - Admin and Broker Only */}
             <Route 
               path="/analytics" 
               element={
@@ -424,22 +430,8 @@ function AppRoutes() {
                 </ProtectedRoute>
               } 
             />
-            
-            {/* Broker compare/claims/submit-claim routes removed to streamline Broker UI; add redirects to prevent direct access */}
-            <Route
-              path="/broker/compare"
-              element={<Navigate to="/broker/dashboard" replace />}
-            />
-            <Route
-              path="/broker/claims"
-              element={<Navigate to="/broker/dashboard" replace />}
-            />
-            <Route
-              path="/broker/submit-claim"
-              element={<Navigate to="/broker/dashboard" replace />}
-            />
 
-            {/* Additional User Routes */}
+            {/* User-specific Routes */}
             <Route 
               path="/user/dashboard" 
               element={
@@ -513,8 +505,9 @@ function AppRoutes() {
               } 
             />
 
-            {/* Catch-all Routes */}
+            {/* Catch-all Routes and Redirects */}
             <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route path="/login-redirect" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

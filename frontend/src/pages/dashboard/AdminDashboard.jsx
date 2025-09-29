@@ -178,10 +178,12 @@ const AdminDashboard = () => {
   }
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    // Convert USD to INR and format
+    const inrAmount = (amount || 0) * 83;
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
+      currency: 'INR'
+    }).format(inrAmount);
   };
 
   // Error boundary
