@@ -317,43 +317,7 @@ const BrokerDashboard = () => {
           </div>
         </div>
 
-        {/* Recent Claims */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Claims</h2>
-            <Link to="/broker/claims" className="text-blue-600 hover:text-blue-800 text-sm">
-              View All
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {dashboardData.recentClaims.length > 0 ? (
-              dashboardData.recentClaims.map((claim) => (
-                <div key={claim.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Claim #{claim.id}</p>
-                    <p className="text-sm text-gray-600">{claim.type} - {formatCurrency(claim.amount)}</p>
-                    <p className="text-xs text-gray-500">Client: {claim.clientName}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      claim.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                      claim.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                      claim.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {claim.status}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <span className="text-4xl mb-4 block">📝</span>
-                <p className="text-gray-500">No recent claims</p>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Recent Claims removed for broker dashboard by admin preference */}
       </div>
 
       {/* Client Activity & Quick Actions */}
@@ -404,13 +368,7 @@ const BrokerDashboard = () => {
               <span className="text-sm font-medium text-gray-900 text-center">Manage Policies</span>
             </Link>
 
-            <Link
-              to="/broker/claims"
-              className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-yellow-50 transition-colors"
-            >
-              <span className="text-3xl mb-2">📝</span>
-              <span className="text-sm font-medium text-gray-900 text-center">Review Claims</span>
-            </Link>
+            {/* Claims quick-action removed */}
 
             <Link
               to="/broker/analytics"

@@ -63,54 +63,60 @@ policyClient.interceptors.response.use(
 // Policy CRUD Operations
 export const getPolicies = async (page = 0, size = 10, sort = 'createdAt,desc') => {
   try {
-    const response = await policyClient.get('/api/policies', {
+    const response = await policyClient.get('/api/policies/all', {
       params: { page, size, sort }
     });
     return response.data;
   } catch (error) {
     console.error('Get policies error:', error);
-    // Return mock data for development
-    return {
-      data: [
-        {
-          id: '1',
-          policyNumber: 'AUTO-2024-001',
-          type: 'Auto Insurance',
-          status: 'Active',
-          premium: 1200,
-          coverage: 50000,
-          startDate: '2024-01-01',
-          endDate: '2024-12-31',
-          description: 'Comprehensive auto insurance coverage'
-        },
-        {
-          id: '2',
-          policyNumber: 'HOME-2024-002',
-          type: 'Home Insurance',
-          status: 'Active',
-          premium: 800,
-          coverage: 300000,
-          startDate: '2024-01-01',
-          endDate: '2024-12-31',
-          description: 'Full home insurance protection'
-        },
-        {
-          id: '3',
-          policyNumber: 'HEALTH-2024-003',
-          type: 'Health Insurance',
-          status: 'Active',
-          premium: 2400,
-          coverage: 100000,
-          startDate: '2024-01-01',
-          endDate: '2024-12-31',
-          description: 'Comprehensive health coverage'
-        }
-      ],
-      totalElements: 3,
-      totalPages: 1,
-      number: 0,
-      size: 10
-    };
+    throw new Error(error.response?.data?.message || 'Failed to fetch policies');
+  }
+};
+
+// Get available policies for users to apply
+export const getAvailablePolicies = async () => {
+  try {
+    const response = await policyClient.get('/api/policies/available');
+    return response.data;
+  } catch (error) {
+    console.error('Get available policies error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch available policies');
+  }
+};
+
+// Get pending policies for admin approval
+export const getPendingPolicies = async () => {
+  try {
+    const response = await policyClient.get('/api/policies/pending');
+    return response.data;
+  } catch (error) {
+    console.error('Get pending policies error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch pending policies');
+  }
+};
+
+// Admin approve/reject policies
+export const approvePolicy = async (policyId) => {
+  try {
+    // Backend expects a PUT for approve
+    const response = await policyClient.put(`/api/policies/${policyId}/approve`);
+    return response.data;
+  } catch (error) {
+    console.error('Approve policy error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to approve policy');
+  }
+};
+
+export const rejectPolicy = async (policyId, reason) => {
+  try {
+    // Backend expects a PUT with the reason in the request body
+    const response = await policyClient.put(`/api/policies/${policyId}/reject`, reason, {
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Reject policy error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to reject policy');
   }
 };
 
@@ -244,11 +250,12 @@ export const getBrokerPolicies = async (brokerId = null) => {
 };
 
 // Policy upload and document management
-export const uploadPolicy = async (file, metadata = {}) => {
+export const uploadPolicy = async (file, name, description) => {
   try {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('metadata', JSON.stringify(metadata));
+    if (name) formData.append('name', name);
+    if (description) formData.append('description', description);
     
     const response = await policyClient.post('/api/policies/upload', formData, {
       headers: {

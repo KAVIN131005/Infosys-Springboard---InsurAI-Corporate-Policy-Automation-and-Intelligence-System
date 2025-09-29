@@ -7,11 +7,21 @@ const PolicyUploader = ({ onUploadSuccess, onUploadError }) => {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState(null);
+  const [policyName, setPolicyName] = useState('');
+  const [policyDescription, setPolicyDescription] = useState('');
+  const [showForm, setShowForm] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileSelect = (selectedFile) => {
     if (selectedFile) {
       setFile(selectedFile);
+      // Auto-fill policy name from file name (without extension) if name is empty
+      if (!policyName || policyName.trim() === '') {
+        const fname = selectedFile.name;
+        const dotIndex = fname.lastIndexOf('.');
+        const base = dotIndex > 0 ? fname.substring(0, dotIndex) : fname;
+        setPolicyName(base);
+      }
       // Create preview for images or show file info
       if (selectedFile.type.startsWith('image/')) {
         const reader = new FileReader();
@@ -22,7 +32,6 @@ const PolicyUploader = ({ onUploadSuccess, onUploadError }) => {
       }
     }
   };
-
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
@@ -46,12 +55,20 @@ const PolicyUploader = ({ onUploadSuccess, onUploadError }) => {
       return;
     }
 
+    if (!policyName.trim()) {
+      onUploadError?.({ message: 'Please enter a policy name' });
+      return;
+    }
+
     setUploading(true);
     try {
-      const result = await uploadPolicy(file);
+      const result = await uploadPolicy(file, policyName.trim(), policyDescription.trim());
       onUploadSuccess?.(result);
       setFile(null);
       setPreview(null);
+      setPolicyName('');
+      setPolicyDescription('');
+      setShowForm(false);
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -66,6 +83,9 @@ const PolicyUploader = ({ onUploadSuccess, onUploadError }) => {
   const removeFile = () => {
     setFile(null);
     setPreview(null);
+    setPolicyName('');
+    setPolicyDescription('');
+    setShowForm(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -168,14 +188,58 @@ const PolicyUploader = ({ onUploadSuccess, onUploadError }) => {
         className="hidden"
       />
 
+      {/* Policy Details Form */}
+      {file && (
+        <div className="mt-6 bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">📝 Policy Details</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Policy Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={policyName}
+                onChange={(e) => setPolicyName(e.target.value)}
+                placeholder="Enter policy name (e.g., Auto Insurance Premium Policy)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                maxLength={100}
+              />
+              <p className="text-xs text-gray-500 mt-1">Auto-filled from file name — you can edit this before upload.</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {policyName.length}/100 characters
+              </p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Policy Description
+              </label>
+              <textarea
+                value={policyDescription}
+                onChange={(e) => setPolicyDescription(e.target.value)}
+                placeholder="Enter a brief description of the policy (optional)"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                maxLength={500}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {policyDescription.length}/500 characters
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Upload Button */}
       {file && (
         <div className="mt-6 flex justify-center space-x-4">
           <Button
             onClick={handleUpload}
-            disabled={uploading}
+            disabled={uploading || !policyName.trim()}
             className={`px-8 py-3 rounded-lg font-medium ${
-              uploading
+              uploading || !policyName.trim()
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { aiHealthService, chatService } from '../../api/aiService';
 import { getClaims } from '../../api/claimService';
-import { getPolicies } from '../../api/policyService';
+import { getUserDashboard } from '../../api/dashboardService';
+import { getCurrentUserPolicies } from '../../api/userPolicyService';
+import { websocketService } from '../../api/websocketService';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import Modal from '../../components/ui/Modal';
@@ -10,6 +12,17 @@ import Modal from '../../components/ui/Modal';
 const UserDashboard = () => {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState({
+    totalPolicies: 0,
+    activePolicies: 0,
+    pendingApprovals: 0,
+    totalClaims: 0,
+    approvedClaims: 0,
+    pendingClaims: 0,
+    totalPremiumPaid: 0,
+    monthlyPremium: 0,
+    totalCoverage: 0,
+    policyTypes: {},
+    recentActivities: [],
     policies: [],
     claims: [],
     aiStatus: null
@@ -19,29 +32,93 @@ const UserDashboard = () => {
   const [chatMessage, setChatMessage] = useState('');
   const [chatResponse, setChatResponse] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
     checkAIServiceHealth();
+    setupWebSocketConnection();
+    
+    return () => {
+      websocketService.disconnect();
+    };
   }, []);
+
+  const setupWebSocketConnection = async () => {
+    if (user?.token) {
+      try {
+        await websocketService.connect(user.token);
+        websocketService.subscribeToUpdates((data) => {
+          console.log('WebSocket data received:', data);
+          if (data.type === 'DASHBOARD_UPDATE' || data.type === 'USER_DASHBOARD_UPDATE') {
+            setDashboardData(prevData => ({
+              ...prevData,
+              ...data.payload
+            }));
+          }
+        });
+        setWsConnected(true);
+      } catch (error) {
+        console.error('WebSocket connection failed:', error);
+        setWsConnected(false);
+      }
+    }
+  };
 
   const loadDashboardData = async () => {
     try {
-      const [claimsResult, policiesResult] = await Promise.allSettled([
-        getClaims().catch(() => []),
-        getPolicies().catch(() => [])
+      setLoading(true);
+      
+      // Load comprehensive dashboard data from backend
+      const [dashboardResult, userPoliciesResult, claimsResult] = await Promise.allSettled([
+        getUserDashboard(),
+        getCurrentUserPolicies().catch(() => []),
+        getClaims().catch(() => [])
       ]);
 
+      // Extract dashboard statistics
+      const dashboardStats = dashboardResult.status === 'fulfilled' ? dashboardResult.value : {};
+      const userPolicies = userPoliciesResult.status === 'fulfilled' ? userPoliciesResult.value : [];
       const claimsData = claimsResult.status === 'fulfilled' ? claimsResult.value : [];
-      const policiesData = policiesResult.status === 'fulfilled' ? policiesResult.value : [];
 
-      setDashboardData({
-        policies: policiesData,
-        claims: claimsData.slice(0, 5), // Show only recent 5 claims
-        aiStatus: null
-      });
+      // Merge all data
+      setDashboardData(prevData => ({
+        ...prevData,
+        // Backend dashboard statistics
+        totalPolicies: dashboardStats.totalPolicies || userPolicies.length,
+        activePolicies: dashboardStats.activePolicies || userPolicies.filter(p => p.status === 'ACTIVE').length,
+        pendingApprovals: dashboardStats.pendingApprovals || userPolicies.filter(p => p.status === 'PENDING').length,
+        totalClaims: dashboardStats.totalClaims || claimsData.length,
+        approvedClaims: dashboardStats.approvedClaims || claimsData.filter(c => c.status === 'APPROVED').length,
+        pendingClaims: dashboardStats.pendingClaims || claimsData.filter(c => c.status === 'PENDING' || c.status === 'UNDER_REVIEW').length,
+        totalPremiumPaid: dashboardStats.totalPremiumPaid || 0,
+        monthlyPremium: dashboardStats.monthlyPremium || 0,
+        totalCoverage: dashboardStats.totalCoverage || userPolicies.reduce((sum, policy) => sum + (parseFloat(policy.coverageAmount) || 0), 0),
+        policyTypes: dashboardStats.policyTypes || {},
+        recentActivities: dashboardStats.recentActivities || [],
+        // Individual records for detailed display
+        policies: userPolicies,
+        claims: claimsData.slice(0, 5) // Show only recent 5 claims
+      }));
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+      // Set minimal data structure on error
+      setDashboardData(prevData => ({
+        ...prevData,
+        totalPolicies: 0,
+        activePolicies: 0,
+        pendingApprovals: 0,
+        totalClaims: 0,
+        approvedClaims: 0,
+        pendingClaims: 0,
+        totalPremiumPaid: 0,
+        monthlyPremium: 0,
+        totalCoverage: 0,
+        policyTypes: {},
+        recentActivities: [],
+        policies: [],
+        claims: []
+      }));
     } finally {
       setLoading(false);
     }
@@ -183,15 +260,25 @@ const UserDashboard = () => {
                 Manage your insurance policies and claims with AI assistance
               </p>
             </div>
-            <div className="ai-status-indicator flex items-center space-x-2">
-              <span className={`w-3 h-3 rounded-full ${
-                getStatusColor(dashboardData.aiStatus?.status) === 'green' ? 'bg-green-500' :
-                getStatusColor(dashboardData.aiStatus?.status) === 'orange' ? 'bg-orange-500' :
-                'bg-red-500'
-              }`}></span>
-              <span className="text-sm text-gray-600">
-                AI Services: {dashboardData.aiStatus?.status || 'Unknown'}
-              </span>
+            <div className="status-indicators flex items-center space-x-4">
+              <div className="ai-status-indicator flex items-center space-x-2">
+                <span className={`w-3 h-3 rounded-full ${
+                  getStatusColor(dashboardData.aiStatus?.status) === 'green' ? 'bg-green-500' :
+                  getStatusColor(dashboardData.aiStatus?.status) === 'orange' ? 'bg-orange-500' :
+                  'bg-red-500'
+                }`}></span>
+                <span className="text-sm text-gray-600">
+                  AI: {dashboardData.aiStatus?.status || 'Unknown'}
+                </span>
+              </div>
+              <div className="ws-status-indicator flex items-center space-x-2">
+                <span className={`w-3 h-3 rounded-full ${
+                  wsConnected ? 'bg-green-500' : 'bg-red-500'
+                }`}></span>
+                <span className="text-sm text-gray-600">
+                  Live Updates: {wsConnected ? 'Connected' : 'Disconnected'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -236,21 +323,31 @@ const UserDashboard = () => {
               <h3 className="text-lg font-semibold text-gray-900">My Policies</h3>
             </div>
             <div className="policies-summary">
-              <div className="summary-stat text-center mb-4">
-                <span className="stat-number text-2xl font-bold text-gray-900 block">
-                  {dashboardData.policies.length}
-                </span>
-                <span className="stat-label text-sm text-gray-600">Active Policies</span>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="summary-stat text-center">
+                  <span className="stat-number text-2xl font-bold text-gray-900 block">
+                    {dashboardData.totalPolicies}
+                  </span>
+                  <span className="stat-label text-xs text-gray-600">Total Policies</span>
+                </div>
+                <div className="summary-stat text-center">
+                  <span className="stat-number text-2xl font-bold text-green-600 block">
+                    {dashboardData.activePolicies}
+                  </span>
+                  <span className="stat-label text-xs text-gray-600">Active</span>
+                </div>
               </div>
               <div className="summary-stat text-center mb-4">
-                <span className="stat-number text-lg font-semibold text-green-600 block">
-                  {formatCurrency(
-                    dashboardData.policies.reduce((sum, policy) => 
-                      sum + (parseFloat(policy.coverageAmount) || 0), 0
-                    )
-                  )}
+                <span className="stat-number text-lg font-semibold text-blue-600 block">
+                  {formatCurrency(dashboardData.totalCoverage)}
                 </span>
                 <span className="stat-label text-sm text-gray-600">Total Coverage</span>
+              </div>
+              <div className="summary-stat text-center">
+                <span className="stat-number text-sm font-medium text-purple-600 block">
+                  {formatCurrency(dashboardData.monthlyPremium)}
+                </span>
+                <span className="stat-label text-xs text-gray-600">Monthly Premium</span>
               </div>
             </div>
             <div className="card-actions">
@@ -272,32 +369,55 @@ const UserDashboard = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900">Recent Claims</h3>
             </div>
-            <div className="claims-list space-y-3 mb-4">
-              {dashboardData.claims.length > 0 ? (
-                dashboardData.claims.slice(0, 3).map((claim, index) => (
-                  <div key={claim.id || index} className="claim-item flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="claim-info">
-                      <span className="claim-id text-sm font-medium text-gray-900 block">
-                        #{claim.id || `CLAIM-${index + 1}`}
-                      </span>
-                      <span className="claim-amount text-sm text-gray-600">
-                        {formatCurrency(claim.amount)}
-                      </span>
+            <div className="claims-summary mb-4">
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="summary-stat text-center">
+                  <span className="stat-number text-lg font-bold text-gray-900 block">
+                    {dashboardData.totalClaims}
+                  </span>
+                  <span className="stat-label text-xs text-gray-600">Total</span>
+                </div>
+                <div className="summary-stat text-center">
+                  <span className="stat-number text-lg font-bold text-green-600 block">
+                    {dashboardData.approvedClaims}
+                  </span>
+                  <span className="stat-label text-xs text-gray-600">Approved</span>
+                </div>
+                <div className="summary-stat text-center">
+                  <span className="stat-number text-lg font-bold text-orange-600 block">
+                    {dashboardData.pendingClaims}
+                  </span>
+                  <span className="stat-label text-xs text-gray-600">Pending</span>
+                </div>
+              </div>
+              
+              <div className="recent-claims space-y-2">
+                {dashboardData.claims.length > 0 ? (
+                  dashboardData.claims.slice(0, 2).map((claim, index) => (
+                    <div key={claim.id || index} className="claim-item flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                      <div className="claim-info">
+                        <span className="claim-id font-medium text-gray-900 block">
+                          #{claim.claimNumber || claim.id || `CLAIM-${index + 1}`}
+                        </span>
+                        <span className="claim-amount text-gray-600">
+                          {formatCurrency(claim.amount)}
+                        </span>
+                      </div>
+                      <div className="claim-status">
+                        <span className={`status-badge px-2 py-1 text-xs font-medium rounded-full ${
+                          getStatusColor(claim.status) === 'green' ? 'bg-green-100 text-green-800' :
+                          getStatusColor(claim.status) === 'orange' ? 'bg-orange-100 text-orange-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {claim.status || 'Pending'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="claim-status">
-                      <span className={`status-badge px-2 py-1 text-xs font-medium rounded-full ${
-                        getStatusColor(claim.status) === 'green' ? 'bg-green-100 text-green-800' :
-                        getStatusColor(claim.status) === 'orange' ? 'bg-orange-100 text-orange-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {claim.status || 'Pending'}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="no-claims text-gray-500 text-center py-4">No recent claims</p>
-              )}
+                  ))
+                ) : (
+                  <p className="no-claims text-gray-500 text-center py-3 text-sm">No recent claims</p>
+                )}
+              </div>
             </div>
             <div className="card-actions space-y-2">
               <Button 
@@ -401,42 +521,96 @@ const UserDashboard = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="dashboard-card bg-white rounded-lg shadow-sm p-6 mt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Recent Activity</h3>
-          <div className="activity-list space-y-3">
-            {dashboardData.claims.length > 0 ? (
-              <>
+        {/* Recent Activity & Summary Statistics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Recent Activity</h3>
+            <div className="activity-list space-y-3">
+              {dashboardData.recentActivities.length > 0 ? (
+                dashboardData.recentActivities.slice(0, 4).map((activity, index) => (
+                  <div key={index} className="activity-item flex items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="activity-icon text-2xl mr-3">
+                      {activity.type === 'POLICY' ? '📋' : activity.type === 'CLAIM' ? '🏥' : '📊'}
+                    </span>
+                    <div className="activity-content flex-1">
+                      <p className="font-medium text-gray-900">{activity.action}</p>
+                      <small className="text-gray-600">
+                        {formatDate(activity.date)}
+                        {activity.amount && ` - ${formatCurrency(activity.amount)}`}
+                      </small>
+                    </div>
+                    {activity.status && (
+                      <span className={`status-badge px-2 py-1 text-xs font-medium rounded-full ${
+                        getStatusColor(activity.status) === 'green' ? 'bg-green-100 text-green-800' :
+                        getStatusColor(activity.status) === 'orange' ? 'bg-orange-100 text-orange-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {activity.status}
+                      </span>
+                    )}
+                  </div>
+                ))
+              ) : (
                 <div className="activity-item flex items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="activity-icon text-2xl mr-3">🏥</span>
+                  <span className="activity-icon text-2xl mr-3">👋</span>
                   <div className="activity-content flex-1">
-                    <p className="font-medium text-gray-900">Latest claim submitted</p>
+                    <p className="font-medium text-gray-900">Welcome to your dashboard!</p>
                     <small className="text-gray-600">
-                      {formatDate(dashboardData.claims[0]?.createdAt || new Date())}
+                      Start by exploring your policies or submitting a claim
                     </small>
                   </div>
                 </div>
-                <div className="activity-item flex items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="activity-icon text-2xl mr-3">🤖</span>
-                  <div className="activity-content flex-1">
-                    <p className="font-medium text-gray-900">
-                      AI services are {dashboardData.aiStatus?.status || 'available'}
-                    </p>
-                    <small className="text-gray-600">Real-time status</small>
+              )}
+            </div>
+          </div>
+
+          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Financial Overview</h3>
+            <div className="financial-stats space-y-4">
+              <div className="stat-row flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-blue-700 font-medium">Total Premium Paid</p>
+                  <p className="text-xs text-blue-600">Lifetime payments</p>
+                </div>
+                <span className="text-lg font-bold text-blue-800">
+                  {formatCurrency(dashboardData.totalPremiumPaid)}
+                </span>
+              </div>
+              
+              <div className="stat-row flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-green-700 font-medium">Monthly Premium</p>
+                  <p className="text-xs text-green-600">Current month</p>
+                </div>
+                <span className="text-lg font-bold text-green-800">
+                  {formatCurrency(dashboardData.monthlyPremium)}
+                </span>
+              </div>
+
+              <div className="stat-row flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-purple-700 font-medium">Total Coverage</p>
+                  <p className="text-xs text-purple-600">Protection amount</p>
+                </div>
+                <span className="text-lg font-bold text-purple-800">
+                  {formatCurrency(dashboardData.totalCoverage)}
+                </span>
+              </div>
+
+              {Object.keys(dashboardData.policyTypes).length > 0 && (
+                <div className="policy-types mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Policy Types:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(dashboardData.policyTypes).map(([type, count]) => (
+                      <div key={type} className="text-center p-2 bg-gray-50 rounded">
+                        <span className="text-lg font-bold text-gray-800 block">{count}</span>
+                        <span className="text-xs text-gray-600">{type}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </>
-            ) : (
-              <div className="activity-item flex items-center p-3 bg-gray-50 rounded-lg">
-                <span className="activity-icon text-2xl mr-3">👋</span>
-                <div className="activity-content flex-1">
-                  <p className="font-medium text-gray-900">Welcome to your dashboard!</p>
-                  <small className="text-gray-600">
-                    Start by exploring your policies or submitting a claim
-                  </small>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

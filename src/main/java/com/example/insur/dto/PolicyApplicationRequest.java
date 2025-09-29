@@ -29,6 +29,9 @@ public class PolicyApplicationRequest {
     private Boolean hasExistingPolicies;
     private String additionalInformation;
     
+    // Financial information - optional
+    private java.math.BigDecimal annualSalary; // optional, used for auto-approval rules
+    
     // Risk Assessment Fields
     private String vehicleDetails; // For auto insurance
     private String propertyDetails; // For property insurance

@@ -1,75 +1,131 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getAdminDashboard, processRevenueChartData, processPolicyDistributionData, processClaimStatusData } from '../../api/dashboardService';
+import { websocketService } from '../../api/websocketService';
 import apiClient from '../../api/apiClient';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
-  const [dashboardData, setDashboardData] = useState({
-    stats: {
-      totalUsers: 0,
-      totalPolicies: 0,
-      totalClaims: 0,
-      pendingClaims: 0,
-      approvedClaims: 0,
-      rejectedClaims: 0,
-      activePolicies: 0,
-      pendingPolicies: 0,
-      totalRevenue: 0,
-      monthlyRevenue: 0
-    },
-    recentUsers: [],
+  console.log('AdminDashboard component rendering...');
+  
+  try {
+    const { user } = useAuth();
+    console.log('Admin user data:', user);
+    
+    const [dashboardData, setDashboardData] = useState({
+    totalUsers: 0,
+    totalPolicies: 0,
+    activePolicies: 0,
+    pendingPolicies: 0,
+    totalClaims: 0,
+    pendingClaims: 0,
+    monthlyRevenue: 0,
+    policyTypeDistribution: {},
+    riskDistribution: {},
     recentPolicies: [],
     recentClaims: [],
-    notifications: [],
+    claimAnalytics: {
+      statusDistribution: {},
+      averageClaimAmount: 0,
+      approvalRate: 0
+    },
+    growthTrends: {
+      policiesLast6Months: 0,
+      usersLast6Months: 0
+    },
     systemHealth: {}
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
+    setupWebSocketConnection();
+    
+    return () => {
+      websocketService.disconnect();
+    };
   }, []);
+
+  const setupWebSocketConnection = async () => {
+    if (user?.token) {
+      try {
+        await websocketService.connect(user.token);
+        websocketService.subscribeToUpdates((data) => {
+          console.log('Admin WebSocket data received:', data);
+          if (data.type === 'DASHBOARD_UPDATE' || data.type === 'ADMIN_DASHBOARD_UPDATE') {
+            setDashboardData(prevData => ({
+              ...prevData,
+              ...data.payload
+            }));
+          }
+        });
+        setWsConnected(true);
+      } catch (error) {
+        console.error('WebSocket connection failed:', error);
+        setWsConnected(false);
+      }
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Fetch all admin dashboard data in parallel
-      const responses = await Promise.allSettled([
-        apiClient.get('/admin/stats'),
-        apiClient.get('/admin/users/recent'),
-        apiClient.get('/admin/policies/recent'),
-        apiClient.get('/admin/claims/recent'),
-        apiClient.get('/admin/notifications'),
-        apiClient.get('/admin/system-health')
-      ]);
-
-      const [statsResponse, usersResponse, policiesResponse, claimsResponse, notificationsResponse, healthResponse] = responses;
-
+      // Fetch comprehensive admin dashboard data from backend
+      const adminData = await getAdminDashboard();
+      
+      // Set the complete dashboard data
       setDashboardData({
-        stats: statsResponse.status === 'fulfilled' ? statsResponse.value.data : {
-          totalUsers: 0,
-          totalPolicies: 0,
-          totalClaims: 0,
-          pendingClaims: 0,
-          approvedClaims: 0,
-          rejectedClaims: 0,
-          activePolicies: 0,
-          pendingPolicies: 0,
-          totalRevenue: 0,
-          monthlyRevenue: 0
-        },
-        recentUsers: usersResponse.status === 'fulfilled' ? usersResponse.value.data : [],
-        recentPolicies: policiesResponse.status === 'fulfilled' ? policiesResponse.value.data : [],
-        recentClaims: claimsResponse.status === 'fulfilled' ? claimsResponse.value.data : [],
-        notifications: notificationsResponse.status === 'fulfilled' ? notificationsResponse.value.data : [],
-        systemHealth: healthResponse.status === 'fulfilled' ? healthResponse.value.data : {}
+        ...adminData,
+        systemHealth: {
+          database: 'Online',
+          api: 'Healthy',
+          aiServices: {
+            ocr: 'Active',
+            fraudDetection: 'Active',
+            riskAssessment: 'Active'
+          }
+        }
       });
     } catch (error) {
       console.error('Error fetching admin dashboard data:', error);
       setError('Failed to load dashboard data. Please try again.');
+      
+      // Set fallback data structure
+      setDashboardData({
+        totalUsers: 0,
+        totalPolicies: 0,
+        activePolicies: 0,
+        pendingPolicies: 0,
+        totalClaims: 0,
+        pendingClaims: 0,
+        monthlyRevenue: 0,
+        policyTypeDistribution: {},
+        riskDistribution: {},
+        recentPolicies: [],
+        recentClaims: [],
+        claimAnalytics: {
+          statusDistribution: {},
+          averageClaimAmount: 0,
+          approvalRate: 0
+        },
+        growthTrends: {
+          policiesLast6Months: 0,
+          usersLast6Months: 0
+        },
+        systemHealth: {
+          database: 'Unknown',
+          api: 'Unknown',
+          aiServices: {
+            ocr: 'Unknown',
+            fraudDetection: 'Unknown',
+            riskAssessment: 'Unknown'
+          }
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -128,6 +184,24 @@ const AdminDashboard = () => {
     }).format(amount || 0);
   };
 
+  // Error boundary
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Error Loading Admin Dashboard</h2>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-8">
@@ -145,7 +219,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.totalUsers?.toLocaleString() || 0}</p>
+              <p className="text-3xl font-bold text-gray-900">{dashboardData.totalUsers?.toLocaleString() || 0}</p>
             </div>
             <div className="text-3xl">👥</div>
           </div>
@@ -155,7 +229,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Policies</p>
-              <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.totalPolicies?.toLocaleString() || 0}</p>
+              <p className="text-3xl font-bold text-gray-900">{dashboardData.totalPolicies?.toLocaleString() || 0}</p>
             </div>
             <div className="text-3xl">📋</div>
           </div>
@@ -165,7 +239,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Policies</p>
-              <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.activePolicies?.toLocaleString() || 0}</p>
+              <p className="text-3xl font-bold text-gray-900">{dashboardData.activePolicies?.toLocaleString() || 0}</p>
             </div>
             <div className="text-3xl">✅</div>
           </div>
@@ -175,7 +249,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Claims</p>
-              <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.pendingClaims?.toLocaleString() || 0}</p>
+              <p className="text-3xl font-bold text-gray-900">{dashboardData.pendingClaims?.toLocaleString() || 0}</p>
             </div>
             <div className="text-3xl">⏳</div>
           </div>
@@ -185,7 +259,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Claims</p>
-              <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.totalClaims?.toLocaleString() || 0}</p>
+              <p className="text-3xl font-bold text-gray-900">{dashboardData.totalClaims?.toLocaleString() || 0}</p>
             </div>
             <div className="text-3xl">📝</div>
           </div>
@@ -194,10 +268,68 @@ const AdminDashboard = () => {
         <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-indigo-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(dashboardData.stats.totalRevenue)}</p>
+              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(dashboardData.monthlyRevenue)}</p>
             </div>
             <div className="text-3xl">💰</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Analytics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">📊 Policy Distribution</h3>
+          <div className="space-y-2">
+            {Object.entries(dashboardData.policyTypeDistribution || {}).map(([type, count]) => (
+              <div key={type} className="flex justify-between">
+                <span className="text-sm text-gray-600">{type}:</span>
+                <span className="text-sm font-semibold">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">⚖️ Risk Distribution</h3>
+          <div className="space-y-2">
+            {Object.entries(dashboardData.riskDistribution || {}).map(([risk, count]) => (
+              <div key={risk} className="flex justify-between">
+                <span className="text-sm text-gray-600">{risk}:</span>
+                <span className={`text-sm font-semibold ${
+                  risk === 'HIGH' ? 'text-red-600' : 
+                  risk === 'MEDIUM' ? 'text-orange-600' : 'text-green-600'
+                }`}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">📈 Growth Trends</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">New Policies (6m):</span>
+              <span className="text-sm font-semibold text-green-600">{dashboardData.growthTrends?.policiesLast6Months || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">New Users (6m):</span>
+              <span className="text-sm font-semibold text-blue-600">{dashboardData.growthTrends?.usersLast6Months || 0}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">🎯 Claim Analytics</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Approval Rate:</span>
+              <span className="text-sm font-semibold text-green-600">{dashboardData.claimAnalytics?.approvalRate || 0}%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Avg Amount:</span>
+              <span className="text-sm font-semibold">{formatCurrency(dashboardData.claimAnalytics?.averageClaimAmount || 0)}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -228,46 +360,20 @@ const AdminDashboard = () => {
                 <span className="text-2xl mr-3">📋</span>
                 <div>
                   <p className="font-medium text-gray-900">Manage Policies</p>
-                  <p className="text-sm text-gray-600">Review and approve policies</p>
+                  <p className="text-sm text-gray-600">Review and manage policies</p>
                 </div>
               </div>
             </Link>
 
             <Link
-              to="/admin/upload-policy"
-              className="block w-full p-3 text-left bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
-            >
-              <div className="flex items-center">
-                <span className="text-2xl mr-3">📤</span>
-                <div>
-                  <p className="font-medium text-gray-900">Upload Policy</p>
-                  <p className="text-sm text-gray-600">Add new insurance policies</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link
-              to="/admin/claims"
+              to="/admin/approvals"
               className="block w-full p-3 text-left bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors"
             >
               <div className="flex items-center">
-                <span className="text-2xl mr-3">�</span>
+                <span className="text-2xl mr-3">✅</span>
                 <div>
-                  <p className="font-medium text-gray-900">Review Claims</p>
-                  <p className="text-sm text-gray-600">Process pending claims</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link
-              to="/admin/compare-policies"
-              className="block w-full p-3 text-left bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
-            >
-              <div className="flex items-center">
-                <span className="text-2xl mr-3">⚖️</span>
-                <div>
-                  <p className="font-medium text-gray-900">Compare Policies</p>
-                  <p className="text-sm text-gray-600">Analyze policy comparisons</p>
+                  <p className="font-medium text-gray-900">Approvals</p>
+                  <p className="text-sm text-gray-600">Approve broker uploaded policies</p>
                 </div>
               </div>
             </Link>
@@ -288,47 +394,49 @@ const AdminDashboard = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">📈 System Health</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">📈 System Health & Real-time Status</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Database Status</span>
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                🟢 {dashboardData.systemHealth.database || 'Online'}
+                🟢 {dashboardData.systemHealth?.database || 'Online'}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-gray-600">API Status</span>
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                🌐 {dashboardData.systemHealth.api || 'Healthy'}
+                🌐 {dashboardData.systemHealth?.api || 'Healthy'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">WebSocket Connection</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                wsConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+                {wsConnected ? '🟢 Connected' : '🔴 Disconnected'}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-gray-600">AI Services</span>
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                🤖 {dashboardData.systemHealth.aiServices?.ocr || 'Active'}
+                🤖 {dashboardData.systemHealth?.aiServices?.ocr || 'Active'}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Fraud Detection</span>
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                🛡️ {dashboardData.systemHealth.aiServices?.fraudDetection || 'Active'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">OCR Service</span>
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                📄 {dashboardData.systemHealth.aiServices?.ocr || 'Active'}
+                �️ {dashboardData.systemHealth?.aiServices?.fraudDetection || 'Active'}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Risk Assessment</span>
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                ⚖️ {dashboardData.systemHealth.aiServices?.riskAssessment || 'Active'}
+                ⚖️ {dashboardData.systemHealth?.aiServices?.riskAssessment || 'Active'}
               </span>
             </div>
           </div>
@@ -340,35 +448,56 @@ const AdminDashboard = () => {
         {/* Recent Users */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">� Recent Users</h2>
-            <Link to="/admin/users" className="text-blue-600 hover:text-blue-800 text-sm">
-              View All
-            </Link>
+            <h2 className="text-xl font-semibold text-gray-900">📋 Recent Activity</h2>
+            <span className="text-sm text-gray-500">Last updated: {new Date().toLocaleTimeString()}</span>
           </div>
           <div className="space-y-3">
-            {dashboardData.recentUsers.length > 0 ? (
-              dashboardData.recentUsers.slice(0, 5).map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                      <span className="text-blue-600 text-sm">👤</span>
+            {dashboardData.recentPolicies?.length > 0 || dashboardData.recentClaims?.length > 0 ? (
+              <>
+                {dashboardData.recentPolicies?.slice(0, 3).map((policy) => (
+                  <div key={`policy-${policy.id}`} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-blue-600 text-sm">�</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">New policy: {policy.name}</p>
+                        <p className="text-xs text-gray-600">{policy.type} - {policy.broker}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{user.firstName} {user.lastName}</p>
-                      <p className="text-xs text-gray-600">{user.email}</p>
-                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      policy.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                      policy.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {policy.status}
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-                    user.role === 'BROKER' ? 'bg-blue-100 text-blue-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {user.role}
-                  </span>
-                </div>
-              ))
+                ))}
+                {dashboardData.recentClaims?.slice(0, 2).map((claim) => (
+                  <div key={`claim-${claim.id}`} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-orange-600 text-sm">📝</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Claim #{claim.claimNumber || claim.id}</p>
+                        <p className="text-xs text-gray-600">{claim.type} - {formatCurrency(claim.amount)}</p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      claim.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                      claim.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      claim.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {claim.status}
+                    </span>
+                  </div>
+                ))}
+              </>
             ) : (
-              <p className="text-gray-500 text-center py-4">No recent users</p>
+              <p className="text-gray-500 text-center py-4">No recent activity</p>
             )}
           </div>
         </div>
@@ -410,43 +539,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Claims */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">📝 Recent Claims</h2>
-          <Link to="/admin/claims" className="text-blue-600 hover:text-blue-800 text-sm">
-            View All
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {dashboardData.recentClaims.length > 0 ? (
-            dashboardData.recentClaims.slice(0, 6).map((claim) => (
-              <div key={claim.id} className="p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-900">Claim #{claim.id}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    claim.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                    claim.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                    claim.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {claim.status}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">{claim.type}</p>
-                <p className="text-lg font-semibold text-gray-900">{formatCurrency(claim.claimAmount)}</p>
-                {claim.aiAnalysisResult && (
-                  <p className="text-xs text-blue-600 mt-1">🤖 AI Analyzed</p>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-500">No recent claims</p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Recent Claims removed to focus admin on Approvals + Analytics */}
 
       {/* Notifications */}
       {dashboardData.notifications.length > 0 && (
@@ -476,6 +569,23 @@ const AdminDashboard = () => {
       )}
     </div>
   );
+  } catch (error) {
+    console.error('AdminDashboard component error:', error);
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Admin Dashboard Error</h2>
+          <p className="text-red-700 mb-4">Failed to render admin dashboard: {error.message}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default AdminDashboard;

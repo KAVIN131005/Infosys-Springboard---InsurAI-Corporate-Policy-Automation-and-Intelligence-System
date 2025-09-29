@@ -1,16 +1,18 @@
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import AdminDashboard from './pages/dashboard/AdminDashboard';
+import AdminDashboard from './pages/dashboard/CleanAdminDashboard';
 import UserDashboard from './pages/dashboard/UserDashboard';
 import BrokerUploadPolicy from './pages/broker/BrokerUploadPolicy';
 import BrokerPolicies from './pages/broker/BrokerPolicies';
+import UserPolicies from './pages/user/UserPolicies';
 import PolicyView from './pages/policy/PolicyView';
 import PolicyComparePage from './pages/policy/PolicyComparePage';
 import SubmitClaim from './pages/claim/SubmitClaim';
 import ClaimStatus from './pages/claim/ClaimStatus';
 import Chatbot from './pages/chatbot/Chatbot';
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
+import AdminApprovals from './pages/dashboard/AdminApprovals';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import { useAuth } from './context/AuthContext';
@@ -132,6 +134,23 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+const PolicyRoutingComponent = () => {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Route to appropriate policy view based on user role
+  switch (user.role) {
+    case 'ADMIN':
+    case 'BROKER':
+      return <BrokerPolicies />;
+    default:
+      return <UserPolicies />;
+  }
+};
+
 function AppRoutes() {
   const { isAuthenticated, loading, initialized } = useAuth();
 
@@ -188,8 +207,8 @@ function AppRoutes() {
             <Route 
               path="/policies" 
               element={
-                <ProtectedRoute roles={["BROKER","ADMIN"]}>
-                  <BrokerPolicies />
+                <ProtectedRoute>
+                  <PolicyRoutingComponent />
                 </ProtectedRoute>
               } 
             />
@@ -284,6 +303,15 @@ function AppRoutes() {
                 </ProtectedRoute>
               } 
             />
+
+            <Route
+              path="/admin/approvals"
+              element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <AdminApprovals />
+                </ProtectedRoute>
+              }
+            />
             
             <Route 
               path="/admin/upload-policy" 
@@ -367,31 +395,18 @@ function AppRoutes() {
               } 
             />
             
-            <Route 
-              path="/broker/compare" 
-              element={
-                <ProtectedRoute roles={['BROKER']}>
-                  <PolicyComparePage />
-                </ProtectedRoute>
-              } 
+            {/* Broker compare/claims/submit-claim routes removed to streamline Broker UI; add redirects to prevent direct access */}
+            <Route
+              path="/broker/compare"
+              element={<Navigate to="/broker/dashboard" replace />}
             />
-            
-            <Route 
-              path="/broker/claims" 
-              element={
-                <ProtectedRoute roles={['BROKER']}>
-                  <ClaimStatus />
-                </ProtectedRoute>
-              } 
+            <Route
+              path="/broker/claims"
+              element={<Navigate to="/broker/dashboard" replace />}
             />
-            
-            <Route 
-              path="/broker/submit-claim" 
-              element={
-                <ProtectedRoute roles={['BROKER']}>
-                  <SubmitClaim />
-                </ProtectedRoute>
-              } 
+            <Route
+              path="/broker/submit-claim"
+              element={<Navigate to="/broker/dashboard" replace />}
             />
 
             {/* Additional User Routes */}

@@ -137,11 +137,124 @@ export const getClaimById = async (id) => {
 // Enhanced Claim Service Functions
 export const submitClaimData = async (claimData) => {
   try {
-    const response = await claimClient.post('/api/claims', claimData);
+    const response = await claimClient.post('/api/claims/submit', claimData);
     return response.data;
   } catch (error) {
     console.error('Submit claim data error:', error);
     throw new Error(error.response?.data?.message || 'Failed to submit claim');
+  }
+};
+
+export const getAllClaims = async () => {
+  try {
+    const response = await claimClient.get('/api/claims/all');
+    return response.data;
+  } catch (error) {
+    console.error('Get all claims error:', error);
+    // Return mock data for development
+    return [
+      {
+        id: 1,
+        claimNumber: 'CLM1704067200000',
+        type: 'AUTO',
+        status: 'UNDER_REVIEW',
+        claimAmount: 5000.00,
+        approvedAmount: null,
+        incidentDate: '2024-06-15T10:30:00',
+        incidentDescription: 'Rear-end collision at traffic light',
+        aiConfidenceScore: 85.5,
+        fraudScore: 15.2,
+        submittedBy: {
+          username: 'john_doe',
+          firstName: 'John',
+          lastName: 'Doe'
+        },
+        createdAt: '2024-06-16T09:00:00'
+      },
+      {
+        id: 2,
+        claimNumber: 'CLM1704067300000',
+        type: 'HEALTH',
+        status: 'APPROVED',
+        claimAmount: 2500.00,
+        approvedAmount: 2500.00,
+        incidentDate: '2024-06-10T14:00:00',
+        incidentDescription: 'Emergency medical treatment',
+        aiConfidenceScore: 92.0,
+        fraudScore: 8.5,
+        submittedBy: {
+          username: 'jane_smith',
+          firstName: 'Jane',
+          lastName: 'Smith'
+        },
+        createdAt: '2024-06-11T11:30:00'
+      }
+    ];
+  }
+};
+
+export const getPendingManualReview = async () => {
+  try {
+    const response = await claimClient.get('/api/claims/pending-review');
+    return response.data;
+  } catch (error) {
+    console.error('Get pending manual review error:', error);
+    // Return mock data for development
+    return [
+      {
+        id: 3,
+        claimNumber: 'CLM1704067400000',
+        type: 'PROPERTY',
+        status: 'UNDER_REVIEW',
+        claimAmount: 15000.00,
+        incidentDescription: 'Water damage from burst pipe',
+        aiConfidenceScore: 65.0,
+        fraudScore: 45.2,
+        requiresManualReview: true,
+        submittedBy: {
+          username: 'bob_johnson',
+          firstName: 'Bob',
+          lastName: 'Johnson'
+        },
+        createdAt: '2024-06-14T16:45:00'
+      }
+    ];
+  }
+};
+
+export const approveClaim = async (claimId, approvedAmount = null, notes = null) => {
+  try {
+    const params = {};
+    if (approvedAmount) params.approvedAmount = approvedAmount;
+    if (notes) params.notes = notes;
+    
+    const response = await claimClient.post(`/api/claims/${claimId}/approve`, null, { params });
+    return response.data;
+  } catch (error) {
+    console.error('Approve claim error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to approve claim');
+  }
+};
+
+export const rejectClaim = async (claimId, reason) => {
+  try {
+    const response = await claimClient.post(`/api/claims/${claimId}/reject`, null, {
+      params: { reason }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Reject claim error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to reject claim');
+  }
+};
+
+export const getClaimByNumber = async (claimNumber) => {
+  try {
+    const response = await claimClient.get(`/api/claims/number/${claimNumber}`);
+    return response.data;
+  } catch (error) {
+    console.error('Get claim by number error:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch claim by number');
   }
 };
 

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { NotificationBell } from '../notifications/NotificationCenter';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -18,7 +19,6 @@ const Navbar = () => {
       return [
         { path: '/broker/dashboard', label: 'Dashboard' },
         { path: '/broker/policies', label: 'Policies' },
-        { path: '/broker/compare', label: 'Compare' },
         { path: '/chatbot', label: 'AI Assistant' },
       ];
     } else { // USER
@@ -72,6 +72,9 @@ const Navbar = () => {
                 </div>
               </div>
             )}
+
+            {/* Notifications */}
+            {user && <NotificationBell user={user} />}
 
             {/* Profile Dropdown */}
             <div className="relative">

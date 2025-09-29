@@ -62,6 +62,12 @@ public class UserPolicy {
     @Column(name = "application_data", columnDefinition = "JSON")
     private String applicationData; // Store application form data as JSON
 
+    @Column(name = "approved_date")
+    private LocalDateTime approvedDate;
+
+    @Column(name = "rejected_date")
+    private LocalDateTime rejectedDate;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

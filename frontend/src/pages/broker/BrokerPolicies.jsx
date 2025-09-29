@@ -2,8 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import PolicyCard from '../../components/policy/PolicyCard';
-import { getPolicies } from '../../api/policyService';
+import { getPolicies, getBrokerPolicies } from '../../api/policyService';
+import axios from 'axios';
+import { getAuthToken } from '../../api/authService';
 import Spinner from '../../components/ui/Spinner';
+
+// Create policy client for direct API calls
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const policyClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+});
+
+// Add auth interceptor
+policyClient.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 const BrokerPolicies = () => {
   const { user } = useAuth();
@@ -12,6 +30,7 @@ const BrokerPolicies = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [stats, setStats] = useState({
     total: 0,
     auto: 0,
@@ -24,83 +43,78 @@ const BrokerPolicies = () => {
     const loadPolicies = async () => {
       try {
         setLoading(true);
-        
-        // Mock data for broker policies
-        const mockPolicies = [
-          {
-            id: 1,
-            policyNumber: 'AUTO-2024-001',
-            type: 'Auto Insurance',
-            premium: 1200,
-            coverage: 100000,
-            status: 'Active',
-            startDate: '2024-01-15',
-            endDate: '2025-01-15',
-            clientName: 'John Smith',
-            clientEmail: 'john.smith@email.com'
-          },
-          {
-            id: 2,
-            policyNumber: 'HOME-2024-002',
-            type: 'Home Insurance',
-            premium: 800,
-            coverage: 250000,
-            status: 'Active',
-            startDate: '2024-02-01',
-            endDate: '2025-02-01',
-            clientName: 'Jane Doe',
-            clientEmail: 'jane.doe@email.com'
-          },
-          {
-            id: 3,
-            policyNumber: 'HEALTH-2024-003',
-            type: 'Health Insurance',
-            premium: 2400,
-            coverage: 500000,
-            status: 'Pending',
-            startDate: '2024-03-01',
-            endDate: '2025-03-01',
-            clientName: 'Bob Johnson',
-            clientEmail: 'bob.johnson@email.com'
-          },
-          {
-            id: 4,
-            policyNumber: 'LIFE-2024-004',
-            type: 'Life Insurance',
-            premium: 1800,
-            coverage: 1000000,
-            status: 'Active',
-            startDate: '2024-01-10',
-            endDate: '2025-01-10',
-            clientName: 'Alice Wilson',
-            clientEmail: 'alice.wilson@email.com'
+        // Choose endpoint based on user role so Admins see all policies
+        let brokerPolicies = [];
+        try {
+          if (user?.role === 'ADMIN') {
+            // Admin should see all policies
+            const response = await policyClient.get('/api/policies');
+            brokerPolicies = response.data || [];
+            console.log('Admin: all policies loaded:', brokerPolicies.length, 'policies');
+          } else if (user?.role === 'BROKER') {
+            const response = await policyClient.get('/api/policies/broker');
+            brokerPolicies = response.data || [];
+            console.log('Broker policies loaded:', brokerPolicies.length, 'policies');
+          } else {
+            // Default to user policies
+            const response = await policyClient.get('/api/policies/user');
+            brokerPolicies = response.data || [];
+            console.log('User policies loaded:', brokerPolicies.length, 'policies');
           }
-        ];
-
-        setPolicies(mockPolicies);
-        setFilteredPolicies(mockPolicies);
+        } catch (apiError) {
+          console.log('Primary endpoint failed, trying fallback endpoints:', apiError.message);
+          try {
+            const fallback = await policyClient.get('/api/policies');
+            brokerPolicies = fallback.data || [];
+            console.log('Fallback loaded policies:', brokerPolicies.length);
+          } catch (finalError) {
+            console.log('Failed to load policies from server:', finalError.message);
+            brokerPolicies = [];
+          }
+        }
+        
+        setPolicies(brokerPolicies);
+        setFilteredPolicies(brokerPolicies);
         
         // Calculate stats
         const policyStats = {
-          total: mockPolicies.length,
-          auto: mockPolicies.filter(p => p.type.includes('Auto')).length,
-          health: mockPolicies.filter(p => p.type.includes('Health')).length,
-          home: mockPolicies.filter(p => p.type.includes('Home')).length,
-          life: mockPolicies.filter(p => p.type.includes('Life')).length
+          total: brokerPolicies.length,
+          auto: brokerPolicies.filter(p => p.type && p.type.toLowerCase().includes('auto')).length,
+          health: brokerPolicies.filter(p => p.type && p.type.toLowerCase().includes('health')).length,
+          home: brokerPolicies.filter(p => p.type && p.type.toLowerCase().includes('home')).length,
+          life: brokerPolicies.filter(p => p.type && p.type.toLowerCase().includes('life')).length
         };
         setStats(policyStats);
         
       } catch (error) {
         console.error('Failed to load policies:', error);
+        // Fallback to empty state
         setPolicies([]);
         setFilteredPolicies([]);
+        setStats({ total: 0, auto: 0, health: 0, home: 0, life: 0 });
       } finally {
         setLoading(false);
       }
     };
 
     loadPolicies();
+  }, [refreshTrigger]);
+
+  // Listen for global updates when policies are approved/rejected elsewhere
+  useEffect(() => {
+    const onPoliciesUpdated = (e) => {
+      console.log('policiesUpdated event received', e?.detail);
+      refreshPolicies();
+    };
+
+    window.addEventListener('policiesUpdated', onPoliciesUpdated);
+    return () => window.removeEventListener('policiesUpdated', onPoliciesUpdated);
   }, []);
+
+  // Function to refresh policies (can be called after upload)
+  const refreshPolicies = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     let filtered = policies;
@@ -108,9 +122,10 @@ const BrokerPolicies = () => {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(policy => 
-        policy.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        policy.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        policy.type.toLowerCase().includes(searchTerm.toLowerCase())
+        (policy.name && policy.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (policy.uploadedBy && policy.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (policy.type && policy.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (policy.description && policy.description.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -137,21 +152,25 @@ const BrokerPolicies = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              🏢 Broker Dashboard
+              {user?.role === 'ADMIN' ? '📋 All Policies' : '🏢 Broker Dashboard'}
             </h1>
             <p className="text-gray-600">
-              Welcome back, {user?.firstName || user?.username}! Manage your client policies.
+              {user?.role === 'ADMIN'
+                ? `Welcome back, ${user?.firstName || user?.username}! Manage platform policies.`
+                : `Welcome back, ${user?.firstName || user?.username}! Manage your client policies.`}
             </p>
           </div>
-          <Link
-            to="/broker/upload"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center"
-          >
-            ➕ Upload New Policy
-          </Link>
+          {user?.role !== 'ADMIN' && (
+            <Link
+              to="/broker/upload"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center"
+            >
+              ➕ Upload New Policy
+            </Link>
+          )}
         </div>
 
         {/* Stats Grid */}
@@ -221,7 +240,7 @@ const BrokerPolicies = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Search by policy number, client name, or type..."
+                  placeholder="Search by policy name, uploader, type, or description..."
                 />
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">
                   🔍
@@ -257,37 +276,58 @@ const BrokerPolicies = () => {
             <div key={policy.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{policy.policyNumber}</h3>
-                  <p className="text-sm text-gray-600">{policy.type}</p>
+                  <div className="flex items-center space-x-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{policy.name || `Policy #${policy.id}`}</h3>
+                      <p className="text-sm text-gray-600">{policy.type || 'General Policy'}</p>
+                    </div>
+                    {/* Extracted badge if monthlyPremium or coverage present */}
+                    {(policy.monthlyPremium || policy.coverage) && (
+                      <div className="ml-2 px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium" title={policy.analysisResult ? 'Values extracted from document' : 'Values provided by system'}>
+                        Extracted
+                      </div>
+                    )}
+                  </div>
+                  {policy.description && (
+                    <p className="text-xs text-gray-500 mt-1">{policy.description}</p>
+                  )}
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  policy.status === 'Active' 
+                  policy.status === 'ACTIVE' 
                     ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
+                    : policy.status === 'PENDING'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {policy.status === 'Active' ? '✅' : '⏳'} {policy.status}
+                  {policy.status === 'ACTIVE' ? '✅' : policy.status === 'PENDING' ? '⏳' : '❓'} {policy.status}
                 </span>
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Client:</span>
-                  <span className="font-medium">{policy.clientName}</span>
+                  <span className="text-gray-600">Uploaded by:</span>
+                  <span className="font-medium">{policy.uploadedBy || 'Unknown'}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Premium:</span>
-                  <span className="font-medium text-green-600">${policy.premium.toLocaleString()}</span>
+                  <span className="text-gray-600">Monthly Premium:</span>
+                  <span className="font-medium text-green-600">
+                    ${policy.monthlyPremium ? Number(policy.monthlyPremium).toLocaleString() : 'N/A'}
+                  </span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Coverage:</span>
-                  <span className="font-medium">${policy.coverage.toLocaleString()}</span>
+                  <span className="font-medium">
+                    ${policy.coverage ? Number(policy.coverage).toLocaleString() : 'N/A'}
+                  </span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Valid Until:</span>
-                  <span className="font-medium">{new Date(policy.endDate).toLocaleDateString()}</span>
+                  <span className="text-gray-600">Created:</span>
+                  <span className="font-medium">
+                    {policy.createdAt ? new Date(policy.createdAt).toLocaleDateString() : 'Unknown'}
+                  </span>
                 </div>
               </div>
 

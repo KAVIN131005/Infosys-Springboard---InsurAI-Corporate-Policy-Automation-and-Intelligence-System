@@ -9,13 +9,11 @@ const Sidebar = () => {
     const role = user?.role;
     
     if (role === 'ADMIN') {
+      // Admin sidebar: focus on system-wide controls and approvals
       return [
         { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
-        { path: '/admin/policies', label: 'All Policies', icon: '📋' },
-        { path: '/admin/upload-policy', label: 'Upload Policy', icon: '📤' },
-        { path: '/admin/compare', label: 'Compare Policies', icon: '⚖️' },
-        { path: '/admin/claims', label: 'All Claims', icon: '📝' },
-        { path: '/admin/submit-claim', label: 'Submit Claim', icon: '✍️' },
+        { path: '/admin/policies', label: 'Policies (Approve)', icon: '�' },
+        { path: '/admin/approvals', label: 'Approvals', icon: '✅' },
         { path: '/analytics', label: 'Analytics', icon: '📈' },
         { path: '/chatbot', label: 'AI Assistant', icon: '🤖' },
       ];
@@ -24,16 +22,12 @@ const Sidebar = () => {
         { path: '/broker/dashboard', label: 'Dashboard', icon: '📊' },
         { path: '/broker/policies', label: 'My Policies', icon: '📋' },
         { path: '/broker/upload', label: 'Upload Policy', icon: '📤' },
-        { path: '/broker/compare', label: 'Compare Policies', icon: '⚖️' },
-        { path: '/broker/claims', label: 'Claims', icon: '📝' },
-        { path: '/broker/submit-claim', label: 'Submit Claim', icon: '✍️' },
         { path: '/analytics', label: 'Analytics', icon: '📈' },
         { path: '/chatbot', label: 'AI Assistant', icon: '🤖' },
       ];
     } else { // USER
       return [
         { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-        // USER-facing policies route should map to the public consumer view
         { path: '/policies', label: 'Available Policies', icon: '📋' },
         { path: '/user/compare', label: 'Compare Policies', icon: '⚖️' },
         { path: '/user/claims', label: 'My Claims', icon: '📝' },

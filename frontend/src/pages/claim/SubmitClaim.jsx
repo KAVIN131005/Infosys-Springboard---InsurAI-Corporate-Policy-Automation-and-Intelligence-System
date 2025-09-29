@@ -3,7 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import ClaimUploader from '../../components/claim/ClaimUploader';
-import { submitClaimData, getUserPolicies } from '../../api/claimService';
+import { submitClaim } from '../../api/claimService';
+import { getCurrentUserPolicies } from '../../api/userPolicyService';
 
 const SubmitClaim = () => {
   const { user } = useAuth();
@@ -44,15 +45,19 @@ const SubmitClaim = () => {
   const loadUserPolicies = async () => {
     setLoading(true);
     try {
-      const response = await getUserPolicies();
-      setPolicies(response.data || []);
+      const response = await getCurrentUserPolicies();
+      // Filter only active policies for claims
+      const activePolicies = (response || []).filter(policy => 
+        policy.status === 'ACTIVE' || policy.status === 'APPROVED'
+      );
+      setPolicies(activePolicies);
     } catch (error) {
       console.error('Error loading policies:', error);
-      // Mock policies for demo
+      // Mock policies for demo when backend is unavailable
       setPolicies([
-        { id: '1', type: 'Auto Insurance', policyNumber: 'AUTO-2024-001', status: 'Active' },
-        { id: '2', type: 'Health Insurance', policyNumber: 'HEALTH-2024-002', status: 'Active' },
-        { id: '3', type: 'Home Insurance', policyNumber: 'HOME-2024-003', status: 'Active' }
+        { id: '1', name: 'Comprehensive Auto Insurance', type: 'AUTO', policyNumber: 'AUTO-2024-001', status: 'ACTIVE' },
+        { id: '2', name: 'Premium Health Insurance', type: 'HEALTH', policyNumber: 'HEALTH-2024-002', status: 'ACTIVE' },
+        { id: '3', name: 'Home Protection Insurance', type: 'PROPERTY', policyNumber: 'HOME-2024-003', status: 'ACTIVE' }
       ]);
     } finally {
       setLoading(false);
@@ -76,13 +81,30 @@ const SubmitClaim = () => {
   const handleSubmitClaim = async () => {
     setSubmitting(true);
     try {
-      const response = await submitClaimData(claimData);
-      alert('Claim submitted successfully! Claim ID: ' + response.claimId);
-      // Reset form or redirect
+      // Prepare claim data for submission
+      const claimSubmission = {
+        policyId: claimData.policyId,
+        type: claimData.claimType.toUpperCase(),
+        incidentDate: claimData.incidentDate,
+        incidentTime: claimData.incidentTime,
+        location: claimData.location,
+        description: claimData.description,
+        claimAmount: parseFloat(claimData.estimatedAmount) || 0,
+        witnesses: claimData.witnesses,
+        policeReportFiled: claimData.policeReport,
+        medicalAttentionReceived: claimData.medicalReport,
+        emergencyServicesCalled: claimData.emergencyServices,
+        supportingDocuments: claimData.documents.map(doc => doc.name).join(', ')
+      };
+
+      const response = await submitClaim(claimSubmission);
+      
+      // Store claim ID for success page
+      localStorage.setItem('lastClaimId', response.claimNumber || response.id);
       setStep(5); // Success step
     } catch (error) {
       console.error('Error submitting claim:', error);
-      alert('Error submitting claim. Please try again.');
+      alert('Error submitting claim: ' + (error.message || 'Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -117,9 +139,17 @@ const SubmitClaim = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
           <div className="text-6xl mb-4">✅</div>
           <h2 className="text-2xl font-bold text-green-700 mb-4">Claim Submitted Successfully!</h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 mb-4">
             Your claim has been submitted and is being processed. You'll receive updates via email.
           </p>
+          {localStorage.getItem('lastClaimId') && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-800">
+                <strong>Claim Number:</strong> {localStorage.getItem('lastClaimId')}
+              </p>
+              <p className="text-green-700 text-sm">Please save this number for your records.</p>
+            </div>
+          )}
           <div className="space-y-3">
             <Button
               onClick={() => window.location.href = '/claim-status'}
@@ -202,8 +232,8 @@ const SubmitClaim = () => {
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <div className="font-medium text-gray-900">{policy.type}</div>
-                        <div className="text-sm text-gray-600">{policy.policyNumber}</div>
+                        <div className="font-medium text-gray-900">{policy.name || policy.type}</div>
+                        <div className="text-sm text-gray-600">{policy.policyNumber || `Policy #${policy.id}`}</div>
                         <div className={`text-sm font-medium ${
                           policy.status === 'Active' ? 'text-green-600' : 'text-red-600'
                         }`}>
