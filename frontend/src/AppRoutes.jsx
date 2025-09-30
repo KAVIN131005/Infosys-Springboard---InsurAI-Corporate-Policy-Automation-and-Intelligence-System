@@ -16,61 +16,19 @@ import AdminClaimApproval from './pages/admin/AdminClaimApproval';
 import Chatbot from './pages/chatbot/Chatbot';
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
 import AdminApprovals from './pages/dashboard/AdminApprovals';
-import Navbar from './components/layout/Navbar';
+
+// New Professional Pages
+import HomePage from './pages/public/HomePage';
+import AboutPage from './pages/public/AboutPage';
+import ContactPage from './pages/public/ContactPage';
+
+// Professional Navbar
+import ProfessionalNavbar from './components/layout/ProfessionalNavbar';
 import Sidebar from './components/layout/Sidebar';
+
 import { useAuth } from './context/AuthContext';
 import Spinner from './components/ui/Spinner';
 import { hasValidToken } from './utils/authUtils';
-
-// Simple Home/Landing Page Component
-const HomePage = () => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
-    <div className="text-center max-w-4xl mx-auto px-6">
-      <div className="mb-8">
-        <div className="text-6xl mb-4">🛡️</div>
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Welcome to InsurAI
-        </h1>
-        <p className="text-xl text-gray-600 mb-8">
-          AI-Powered Insurance Management Platform
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="text-3xl mb-3">🤖</div>
-          <h3 className="text-lg font-semibold mb-2">AI-Powered Claims</h3>
-          <p className="text-gray-600">Intelligent claim processing with fraud detection</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="text-3xl mb-3">📊</div>
-          <h3 className="text-lg font-semibold mb-2">Smart Analytics</h3>
-          <p className="text-gray-600">Real-time insights and risk assessment</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="text-3xl mb-3">🔒</div>
-          <h3 className="text-lg font-semibold mb-2">Secure Platform</h3>
-          <p className="text-gray-600">Enterprise-grade security and compliance</p>
-        </div>
-      </div>
-      
-      <div className="space-x-4">
-        <button 
-          onClick={() => window.location.href = '/login'}
-          className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-        >
-          Sign In
-        </button>
-        <button 
-          onClick={() => window.location.href = '/register'}
-          className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-        >
-          Get Started
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 const ProtectedRoute = ({ children, roles }) => {
   const { user, isAuthenticated, loading, initialized } = useAuth();
@@ -189,15 +147,17 @@ function AppRoutes() {
 
   return (
     <Router>
-      {isAuthenticated && <Navbar />}
+      <ProfessionalNavbar />
       <div className="flex">
         {isAuthenticated && <Sidebar />}
         <main className={`flex-1 ${isAuthenticated ? 'p-4' : ''}`}>
           <Routes>
-            {/* Public Home Route */}
-            <Route path="/" element={<HomePage />} />
-            
             {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            
+            {/* Auth Routes */}
             <Route 
               path="/login" 
               element={

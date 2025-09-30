@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { aiHealthService, chatService } from '../../api/aiService';
 import { getClaims } from '../../api/claimService';
 import { getUserDashboard } from '../../api/dashboardService';
@@ -12,6 +13,7 @@ import Modal from '../../components/ui/Modal';
 
 const UserDashboard = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     totalPolicies: 0,

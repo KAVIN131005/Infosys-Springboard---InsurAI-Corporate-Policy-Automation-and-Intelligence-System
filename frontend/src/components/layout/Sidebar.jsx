@@ -1,8 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const Sidebar = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const location = useLocation();
 
   // Define navigation items for each role
@@ -49,14 +51,22 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="hidden md:block w-64 bg-white border-r border-gray-200 shadow-sm">
+    <aside className={`hidden md:block w-64 border-r shadow-sm transition-all duration-300 ${
+      isDark 
+        ? 'bg-slate-800/50 border-slate-700' 
+        : 'bg-white border-gray-200'
+    }`}>
       <div className="p-4">
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">
+          <h2 className={`text-lg font-semibold mb-2 ${
+            isDark ? 'text-white' : 'text-gray-800'
+          }`}>
             {user?.role === 'ADMIN' ? 'Admin Panel' : 
              user?.role === 'BROKER' ? 'Broker Panel' : 'User Panel'}
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className={`text-sm ${
+            isDark ? 'text-slate-400' : 'text-gray-600'
+          }`}>
             Welcome, {user?.firstName || user?.username}
           </p>
         </div>
@@ -66,10 +76,14 @@ const Sidebar = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 group ${
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 group ${
                 isActivePath(item.path)
-                  ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-500'
-                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                  ? isDark
+                    ? 'bg-blue-900/50 text-blue-300 border-r-2 border-blue-400'
+                    : 'bg-blue-100 text-blue-700 border-r-2 border-blue-500'
+                  : isDark
+                    ? 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
               }`}
             >
               <span className={`mr-3 text-lg transition-transform duration-200 ${
@@ -83,11 +97,15 @@ const Sidebar = () => {
         </nav>
 
         {/* Role Badge */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className={`mt-6 pt-4 border-t ${
+          isDark ? 'border-slate-600' : 'border-gray-200'
+        }`}>
           <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            user?.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-            user?.role === 'BROKER' ? 'bg-blue-100 text-blue-800' :
-            'bg-green-100 text-green-800'
+            user?.role === 'ADMIN' 
+              ? isDark ? 'bg-red-900/50 text-red-300' : 'bg-red-100 text-red-800'
+              : user?.role === 'BROKER' 
+                ? isDark ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-800'
+                : isDark ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-800'
           }`}>
             {user?.role}
           </div>
