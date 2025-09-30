@@ -59,12 +59,12 @@ const HomePage = () => {
     }`}>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="container-responsive pt-16 sm:pt-20 lg:pt-24 pb-12 sm:pb-16">
           <div className="text-center">
             {/* Logo Animation */}
-            <div className="mb-8 flex justify-center">
+            <div className="mb-6 sm:mb-8 flex justify-center">
               <div className="relative">
-                <div className="text-8xl mb-4 animate-pulse">🛡️</div>
+                <div className="text-6xl sm:text-7xl lg:text-8xl mb-4 animate-pulse">🛡️</div>
                 <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${
                   isDark ? 'bg-blue-400' : 'bg-blue-500'
                 }`}></div>
@@ -72,7 +72,7 @@ const HomePage = () => {
             </div>
             
             {/* Main Heading */}
-            <h1 className={`text-5xl md:text-7xl font-bold mb-6 ${
+            <h1 className={`text-responsive-2xl font-bold mb-4 sm:mb-6 px-4 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
               Welcome to{' '}
@@ -81,13 +81,13 @@ const HomePage = () => {
               </span>
             </h1>
             
-            <p className={`text-xl md:text-2xl mb-8 max-w-3xl mx-auto ${
+            <p className={`text-lg sm:text-xl lg:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 ${
               isDark ? 'text-slate-300' : 'text-gray-600'
             }`}>
               The Future of Insurance Management
             </p>
             
-            <p className={`text-lg mb-12 max-w-4xl mx-auto ${
+            <p className={`text-base sm:text-lg mb-8 sm:mb-12 max-w-4xl mx-auto px-4 ${
               isDark ? 'text-slate-400' : 'text-gray-500'
             }`}>
               Revolutionizing insurance with artificial intelligence, machine learning, and cutting-edge technology. 
@@ -95,17 +95,17 @@ const HomePage = () => {
             </p>
             
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 px-4">
               <Link
                 to="/register"
-                className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-lg transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:scale-105 shadow-xl hover:shadow-2xl"
+                className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-base sm:text-lg transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:scale-105 shadow-xl hover:shadow-2xl"
               >
                 <span className="relative z-10">Get Started Free</span>
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400 to-indigo-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               </Link>
               <Link
                 to="/about"
-                className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 border-2 ${
+                className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-300 hover:scale-105 border-2 ${
                   isDark
                     ? 'border-slate-600 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
                     : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
@@ -116,23 +116,23 @@ const HomePage = () => {
             </div>
             
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 px-4">
               {stats.map((stat, index) => (
                 <div 
                   key={index}
-                  className={`text-center p-6 rounded-xl transition-all duration-300 hover:scale-105 ${
+                  className={`text-center spacing-responsive rounded-xl transition-all duration-300 hover:scale-105 ${
                     isDark 
                       ? 'bg-slate-800/50 border border-slate-700' 
                       : 'bg-white/70 border border-gray-200 shadow-lg'
                   }`}
                 >
-                  <div className="text-3xl mb-2">{stat.icon}</div>
-                  <div className={`text-2xl font-bold mb-1 ${
+                  <div className="text-2xl sm:text-3xl mb-2">{stat.icon}</div>
+                  <div className={`text-xl sm:text-2xl font-bold mb-1 ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}>
                     {stat.value}
                   </div>
-                  <div className={`text-sm ${
+                  <div className={`text-xs sm:text-sm ${
                     isDark ? 'text-slate-400' : 'text-gray-600'
                   }`}>
                     {stat.label}
@@ -145,47 +145,47 @@ const HomePage = () => {
       </section>
 
       {/* Features Section */}
-      <section className={`py-20 ${
+      <section className={`py-16 sm:py-20 ${
         isDark ? 'bg-slate-800/30' : 'bg-white/50'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className={`text-4xl md:text-5xl font-bold mb-6 ${
+        <div className="container-responsive">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className={`text-responsive-xl font-bold mb-4 sm:mb-6 px-4 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
               Why Choose InsurAI?
             </h2>
-            <p className={`text-lg max-w-3xl mx-auto ${
+            <p className={`text-base sm:text-lg max-w-3xl mx-auto px-4 ${
               isDark ? 'text-slate-400' : 'text-gray-600'
             }`}>
               Experience the next generation of insurance technology with features designed for the modern world.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid-responsive">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`group p-8 rounded-2xl transition-all duration-300 hover:scale-105 cursor-pointer ${
+                className={`group spacing-responsive rounded-2xl transition-all duration-300 hover:scale-105 cursor-pointer ${
                   isDark
                     ? 'bg-slate-800/50 border border-slate-700 hover:bg-slate-700/50'
                     : 'bg-white border border-gray-200 hover:shadow-xl shadow-lg'
                 }`}
               >
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
                   {feature.icon}
                 </div>
-                <h3 className={`text-xl font-semibold mb-3 ${
+                <h3 className={`text-lg sm:text-xl font-semibold mb-2 sm:mb-3 ${
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}>
                   {feature.title}
                 </h3>
-                <p className={`text-base mb-4 ${
+                <p className={`text-sm sm:text-base mb-3 sm:mb-4 ${
                   isDark ? 'text-slate-300' : 'text-gray-600'
                 }`}>
                   {feature.description}
                 </p>
-                <p className={`text-sm ${
+                <p className={`text-xs sm:text-sm ${
                   isDark ? 'text-slate-400' : 'text-gray-500'
                 }`}>
                   {feature.details}
@@ -197,26 +197,26 @@ const HomePage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className={`py-20 ${
+      <section className={`py-16 sm:py-20 ${
         isDark ? 'bg-gradient-to-r from-slate-900 to-slate-800' : 'bg-gradient-to-r from-blue-600 to-indigo-600'
       }`}>
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+        <div className="container-responsive text-center">
+          <h2 className="text-responsive-xl font-bold text-white mb-4 sm:mb-6 px-4">
             Ready to Transform Your Insurance Experience?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8 px-4">
             Join thousands of satisfied customers who have revolutionized their insurance management with InsurAI.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex-responsive justify-center px-4">
             <Link
               to="/register"
-              className="px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-all duration-300 hover:scale-105 shadow-xl"
+              className="mobile-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-blue-600 rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-50 transition-all duration-300 hover:scale-105 shadow-xl text-center"
             >
               Start Your Free Trial
             </Link>
             <Link
               to="/contact"
-              className="px-8 py-4 border-2 border-white text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105"
+              className="mobile-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 border-white text-white rounded-xl font-semibold text-base sm:text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105 text-center"
             >
               Contact Sales
             </Link>

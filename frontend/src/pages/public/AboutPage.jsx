@@ -74,102 +74,76 @@ const AboutPage = () => {
     {
       title: 'Innovation First',
       description: 'We constantly push the boundaries of what\'s possible in insurance technology.',
-      icon: '💡',
-      color: 'blue'
+      icon: '💡'
     },
     {
       title: 'Customer-Centric',
       description: 'Every decision we make is focused on improving our customers\' experience.',
-      icon: '❤️',
-      color: 'red'
+      icon: '❤️'
     },
     {
       title: 'Transparency',
       description: 'We believe in clear, honest communication and transparent business practices.',
-      icon: '🔍',
-      color: 'green'
+      icon: '🔍'
     },
     {
       title: 'Security & Trust',
       description: 'Your data security and privacy are our highest priorities.',
-      icon: '🛡️',
-      color: 'purple'
+      icon: '🛡️'
     }
   ];
 
   return (
-    <div className={`min-h-screen transition-all duration-300 ${
-      isDark 
-        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
-        : 'bg-gradient-to-br from-blue-50 via-white to-indigo-50'
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark ? 'bg-slate-900 text-white' : 'bg-white text-gray-900'
     }`}>
       {/* Hero Section */}
-      <section className="pt-20 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className={`text-5xl md:text-6xl font-bold mb-6 ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              About{' '}
-              <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 bg-clip-text text-transparent">
-                InsurAI
-              </span>
-            </h1>
-            <p className={`text-xl md:text-2xl mb-8 max-w-4xl mx-auto ${
-              isDark ? 'text-slate-300' : 'text-gray-600'
-            }`}>
-              Pioneering the Future of Insurance with Artificial Intelligence
-            </p>
-          </div>
+      <section className={`py-16 sm:py-20 ${
+        isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'
+      }`}>
+        <div className="container-responsive text-center">
+          <h1 className="text-responsive-2xl font-bold mb-4 sm:mb-6 px-4">
+            About InsurAI
+          </h1>
+          <p className={`text-lg sm:text-xl leading-relaxed px-4 sm:px-8 lg:px-16 ${
+            isDark ? 'text-slate-300' : 'text-gray-600'
+          }`}>
+            Revolutionizing insurance management with artificial intelligence and smart automation.
+            Making insurance accessible, understandable, and efficient for everyone.
+          </p>
         </div>
       </section>
 
       {/* Mission Section */}
-      <section className={`py-16 ${
-        isDark ? 'bg-slate-800/30' : 'bg-white/50'
-      }`}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className={`text-4xl font-bold mb-6 ${
-                isDark ? 'text-white' : 'text-gray-900'
-              }`}>
-                Our Mission
-              </h2>
-              <p className={`text-lg mb-6 ${
+      <section className="py-12 sm:py-16">
+        <div className="container-responsive">
+          <div className="grid-responsive">
+            <div className="px-4">
+              <h2 className="text-responsive-xl font-bold mb-4 sm:mb-6">Our Mission</h2>
+              <p className={`text-base sm:text-lg leading-relaxed mb-6 ${
                 isDark ? 'text-slate-300' : 'text-gray-600'
               }`}>
-                At InsurAI, we're on a mission to democratize insurance through the power of artificial intelligence. 
-                We believe that everyone deserves access to fair, transparent, and efficient insurance services.
+                At InsurAI, we believe insurance should be simple, transparent, and intelligent. 
+                Our mission is to harness the power of artificial intelligence to create an 
+                insurance experience that truly serves people's needs.
               </p>
-              <p className={`text-lg mb-6 ${
+              <p className={`text-base sm:text-lg leading-relaxed ${
                 isDark ? 'text-slate-300' : 'text-gray-600'
               }`}>
-                Our cutting-edge AI technology eliminates traditional barriers, reduces costs, and accelerates 
-                processing times while maintaining the highest standards of accuracy and security.
-              </p>
-              <p className={`text-lg ${
-                isDark ? 'text-slate-300' : 'text-gray-600'
-              }`}>
-                We're not just building software; we're crafting the future of insurance—one algorithm at a time.
+                We're building the future of insurance - one where claims are processed instantly, 
+                policies are personalized, and customer service is available 24/7 through intelligent automation.
               </p>
             </div>
-            <div className={`text-center p-8 rounded-2xl ${
-              isDark 
-                ? 'bg-slate-800/50 border border-slate-700' 
-                : 'bg-white border border-gray-200 shadow-xl'
+            <div className={`px-4 rounded-xl p-6 sm:p-8 ${
+              isDark ? 'bg-slate-800' : 'bg-blue-50'
             }`}>
-              <div className="text-6xl mb-6">🎯</div>
-              <h3 className={`text-2xl font-bold mb-4 ${
-                isDark ? 'text-white' : 'text-gray-900'
-              }`}>
-                Our Vision
-              </h3>
-              <p className={`text-lg ${
+              <h3 className="text-lg sm:text-xl font-semibold mb-4">Why We Started</h3>
+              <p className={`text-sm sm:text-base leading-relaxed ${
                 isDark ? 'text-slate-300' : 'text-gray-600'
               }`}>
-                To become the world's most trusted AI-powered insurance platform, 
-                making insurance accessible, affordable, and intelligent for everyone.
+                After experiencing the frustration of traditional insurance processes firsthand, 
+                our founders realized that technology could solve these age-old problems. 
+                We started InsurAI to create the insurance company we wished existed.
               </p>
             </div>
           </div>
@@ -177,38 +151,19 @@ const AboutPage = () => {
       </section>
 
       {/* Values Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className={`text-4xl font-bold mb-6 ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              Our Core Values
-            </h2>
-            <p className={`text-lg max-w-3xl mx-auto ${
-              isDark ? 'text-slate-400' : 'text-gray-600'
-            }`}>
-              These values guide every decision we make and every product we build.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className={`py-12 sm:py-16 ${
+        isDark ? 'bg-slate-800' : 'bg-gray-50'
+      }`}>
+        <div className="container-responsive">
+          <h2 className="text-responsive-xl font-bold text-center mb-8 sm:mb-12 px-4">Our Values</h2>
+          <div className="grid-responsive">
             {values.map((value, index) => (
-              <div
-                key={index}
-                className={`text-center p-8 rounded-2xl transition-all duration-300 hover:scale-105 ${
-                  isDark
-                    ? 'bg-slate-800/50 border border-slate-700 hover:bg-slate-700/50'
-                    : 'bg-white border border-gray-200 hover:shadow-xl shadow-lg'
-                }`}
-              >
-                <div className="text-4xl mb-4">{value.icon}</div>
-                <h3 className={`text-xl font-semibold mb-3 ${
-                  isDark ? 'text-white' : 'text-gray-900'
-                }`}>
-                  {value.title}
-                </h3>
-                <p className={`text-sm ${
+              <div key={index} className={`rounded-xl p-6 sm:p-8 text-center transition-transform hover:scale-105 ${
+                isDark ? 'bg-slate-900' : 'bg-white'
+              } shadow-lg hover:shadow-xl`}>
+                <div className="text-3xl sm:text-4xl mb-4">{value.icon}</div>
+                <h3 className="text-lg sm:text-xl font-semibold mb-3">{value.title}</h3>
+                <p className={`text-sm sm:text-base ${
                   isDark ? 'text-slate-300' : 'text-gray-600'
                 }`}>
                   {value.description}
@@ -219,111 +174,23 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Timeline Section */}
-      <section className={`py-16 ${
-        isDark ? 'bg-slate-800/30' : 'bg-white/50'
-      }`}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className={`text-4xl font-bold mb-6 ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              Our Journey
-            </h2>
-            <p className={`text-lg max-w-3xl mx-auto ${
-              isDark ? 'text-slate-400' : 'text-gray-600'
-            }`}>
-              From startup to industry leader - here's how we've grown and evolved.
-            </p>
-          </div>
-
-          <div className="relative">
-            {/* Timeline Line */}
-            <div className={`absolute left-1/2 transform -translate-x-1/2 w-1 h-full ${
-              isDark ? 'bg-slate-600' : 'bg-gray-300'
-            }`}></div>
-
-            {milestones.map((milestone, index) => (
-              <div key={index} className={`relative flex items-center mb-12 ${
-                index % 2 === 0 ? 'justify-start' : 'justify-end'
-              }`}>
-                <div className={`w-5/12 ${
-                  index % 2 === 0 ? 'text-right pr-8' : 'text-left pl-8'
-                }`}>
-                  <div className={`p-6 rounded-xl ${
-                    isDark
-                      ? 'bg-slate-800/50 border border-slate-700'
-                      : 'bg-white border border-gray-200 shadow-lg'
-                  }`}>
-                    <div className="text-3xl mb-3">{milestone.icon}</div>
-                    <div className={`text-sm font-semibold mb-2 ${
-                      isDark ? 'text-blue-400' : 'text-blue-600'
-                    }`}>
-                      {milestone.year}
-                    </div>
-                    <h3 className={`text-lg font-bold mb-2 ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      {milestone.title}
-                    </h3>
-                    <p className={`text-sm ${
-                      isDark ? 'text-slate-300' : 'text-gray-600'
-                    }`}>
-                      {milestone.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Timeline Dot */}
-                <div className={`absolute left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full border-4 ${
-                  isDark 
-                    ? 'bg-blue-500 border-slate-800' 
-                    : 'bg-blue-500 border-white'
-                }`}></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Team Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className={`text-4xl font-bold mb-6 ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              Meet Our Team
-            </h2>
-            <p className={`text-lg max-w-3xl mx-auto ${
-              isDark ? 'text-slate-400' : 'text-gray-600'
-            }`}>
-              World-class experts passionate about revolutionizing the insurance industry.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className="py-12 sm:py-16">
+        <div className="container-responsive">
+          <h2 className="text-responsive-xl font-bold text-center mb-8 sm:mb-12 px-4">Meet Our Team</h2>
+          <div className="grid-responsive">
             {teamMembers.map((member, index) => (
-              <div
-                key={index}
-                className={`text-center p-6 rounded-2xl transition-all duration-300 hover:scale-105 ${
-                  isDark
-                    ? 'bg-slate-800/50 border border-slate-700 hover:bg-slate-700/50'
-                    : 'bg-white border border-gray-200 hover:shadow-xl shadow-lg'
-                }`}
-              >
-                <div className="text-6xl mb-4">{member.image}</div>
-                <h3 className={`text-xl font-semibold mb-1 ${
-                  isDark ? 'text-white' : 'text-gray-900'
-                }`}>
-                  {member.name}
-                </h3>
-                <p className={`text-sm mb-3 ${
+              <div key={index} className={`rounded-xl p-6 sm:p-8 text-center transition-transform hover:scale-105 ${
+                isDark ? 'bg-slate-800' : 'bg-white'
+              } shadow-lg hover:shadow-xl`}>
+                <div className="text-4xl sm:text-5xl mb-4">{member.image}</div>
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">{member.name}</h3>
+                <p className={`text-sm sm:text-base font-medium mb-3 ${
                   isDark ? 'text-blue-400' : 'text-blue-600'
                 }`}>
                   {member.role}
                 </p>
-                <p className={`text-sm ${
+                <p className={`text-sm leading-relaxed ${
                   isDark ? 'text-slate-300' : 'text-gray-600'
                 }`}>
                   {member.bio}
@@ -334,29 +201,62 @@ const AboutPage = () => {
         </div>
       </section>
 
+      {/* Timeline Section */}
+      <section className={`py-12 sm:py-16 ${
+        isDark ? 'bg-slate-800' : 'bg-gray-50'
+      }`}>
+        <div className="container-responsive">
+          <h2 className="text-responsive-xl font-bold text-center mb-8 sm:mb-12 px-4">Our Journey</h2>
+          <div className="max-w-4xl mx-auto px-4">
+            {milestones.map((milestone, index) => (
+              <div key={index} className="flex flex-col sm:flex-row items-center sm:items-start mb-8 sm:mb-12 last:mb-0">
+                <div className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-xl sm:text-2xl mb-4 sm:mb-0 sm:mr-6 ${
+                  isDark ? 'bg-blue-600' : 'bg-blue-500'
+                } text-white`}>
+                  {milestone.icon}
+                </div>
+                <div className="text-center sm:text-left">
+                  <div className={`text-sm font-semibold mb-2 ${
+                    isDark ? 'text-blue-400' : 'text-blue-600'
+                  }`}>
+                    {milestone.year}
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2">{milestone.title}</h3>
+                  <p className={`text-sm sm:text-base ${
+                    isDark ? 'text-slate-300' : 'text-gray-600'
+                  }`}>
+                    {milestone.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className={`py-16 ${
+      <section className={`py-16 sm:py-20 ${
         isDark ? 'bg-gradient-to-r from-slate-900 to-slate-800' : 'bg-gradient-to-r from-blue-600 to-indigo-600'
       }`}>
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-white mb-6">
-            Join Us on Our Mission
+        <div className="container-responsive text-center">
+          <h2 className="text-responsive-xl font-bold text-white mb-4 sm:mb-6 px-4">
+            Join Us in Revolutionizing Insurance
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Be part of the insurance revolution and experience the future today.
+          <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8 px-4">
+            Be part of the future where insurance is intelligent, accessible, and truly customer-centric.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex-responsive justify-center px-4">
             <a
-              href="/register"
-              className="px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-all duration-300 hover:scale-105 shadow-xl"
+              href="/careers"
+              className="mobile-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-blue-600 rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-50 transition-all duration-300 hover:scale-105 shadow-xl text-center"
             >
-              Get Started Today
+              View Careers
             </a>
             <a
               href="/contact"
-              className="px-8 py-4 border-2 border-white text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105"
+              className="mobile-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 border-white text-white rounded-xl font-semibold text-base sm:text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105 text-center"
             >
-              Contact Our Team
+              Get in Touch
             </a>
           </div>
         </div>

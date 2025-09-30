@@ -119,45 +119,36 @@ const ContactPage = () => {
         : 'bg-gradient-to-br from-blue-50 via-white to-indigo-50'
     }`}>
       {/* Hero Section */}
-      <section className="pt-20 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className={`text-5xl md:text-6xl font-bold mb-6 ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              Contact{' '}
-              <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 bg-clip-text text-transparent">
-                InsurAI
-              </span>
-            </h1>
-            <p className={`text-xl md:text-2xl mb-8 max-w-4xl mx-auto ${
-              isDark ? 'text-slate-300' : 'text-gray-600'
-            }`}>
-              Get in Touch with Our Expert Team
-            </p>
-            <p className={`text-lg mb-12 max-w-3xl mx-auto ${
-              isDark ? 'text-slate-400' : 'text-gray-500'
-            }`}>
-              Whether you have questions about our platform, need technical support, or want to explore partnership opportunities, we're here to help.
-            </p>
-          </div>
+      <section className={`py-16 sm:py-20 ${
+        isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'
+      }`}>
+        <div className="container-responsive text-center">
+          <h1 className="text-responsive-2xl font-bold mb-4 sm:mb-6 px-4">
+            Contact Us
+          </h1>
+          <p className={`text-lg sm:text-xl leading-relaxed px-4 sm:px-8 lg:px-16 mb-4 sm:mb-6 ${
+            isDark ? 'text-slate-300' : 'text-gray-600'
+          }`}>
+            Get in touch with our team. We're here to help with any questions about InsurAI and our services.
+          </p>
+          <p className={`text-sm sm:text-base leading-relaxed px-4 sm:px-8 lg:px-16 ${
+            isDark ? 'text-slate-400' : 'text-gray-500'
+          }`}>
+            Whether you have questions about our platform, need technical support, or want to explore partnership opportunities, we're here to help.
+          </p>
         </div>
       </section>
 
       {/* Contact Methods */}
-      <section className={`py-16 ${
-        isDark ? 'bg-slate-800/30' : 'bg-white/50'
+      <section className={`py-12 sm:py-16 ${
+        isDark ? 'bg-slate-800' : 'bg-gray-50'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className={`text-4xl font-bold mb-6 ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              How Can We Help?
-            </h2>
-          </div>
+        <div className="container-responsive">
+          <h2 className="text-responsive-xl font-bold text-center mb-8 sm:mb-12 px-4">
+            How Can We Help?
+          </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid-responsive">
             {contactInfo.map((info, index) => (
               <a
                 key={index}
@@ -193,25 +184,25 @@ const ContactPage = () => {
       </section>
 
       {/* Contact Form and Office Locations */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <section className="py-12 sm:py-16">
+        <div className="container-responsive">
+          <div className="grid-responsive lg:grid-cols-2">
             {/* Contact Form */}
-            <div className={`p-8 rounded-2xl ${
+            <div className={`p-6 sm:p-8 rounded-xl ${
               isDark
-                ? 'bg-slate-800/50 border border-slate-700'
+                ? 'bg-slate-800 border border-slate-700'
                 : 'bg-white border border-gray-200 shadow-xl'
             }`}>
-              <h3 className={`text-3xl font-bold mb-6 ${
+              <h3 className={`text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 ${
                 isDark ? 'text-white' : 'text-gray-900'
               }`}>
                 Send us a Message
               </h3>
               
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${
+                    <label className={`block text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
                       isDark ? 'text-slate-300' : 'text-gray-700'
                     }`}>
                       Your Name *
@@ -222,7 +213,7 @@ const ContactPage = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base ${
                         isDark
                           ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
                           : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -232,7 +223,7 @@ const ContactPage = () => {
                   </div>
                   
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${
+                    <label className={`block text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
                       isDark ? 'text-slate-300' : 'text-gray-700'
                     }`}>
                       Email Address *
@@ -243,7 +234,7 @@ const ContactPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
-                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base ${
                         isDark
                           ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
                           : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -253,9 +244,9 @@ const ContactPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${
+                    <label className={`block text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
                       isDark ? 'text-slate-300' : 'text-gray-700'
                     }`}>
                       Company
@@ -265,7 +256,7 @@ const ContactPage = () => {
                       name="company"
                       value={formData.company}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base ${
                         isDark
                           ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
                           : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -275,7 +266,7 @@ const ContactPage = () => {
                   </div>
                   
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${
+                    <label className={`block text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
                       isDark ? 'text-slate-300' : 'text-gray-700'
                     }`}>
                       Inquiry Type

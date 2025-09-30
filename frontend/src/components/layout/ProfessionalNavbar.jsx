@@ -180,7 +180,7 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  className={`flex px-3 py-2 rounded-md text-base font-medium transition-all duration-200 items-center space-x-2 ${
                     isActive(item.path)
                       ? isDark
                         ? 'bg-blue-600/20 text-blue-400'
