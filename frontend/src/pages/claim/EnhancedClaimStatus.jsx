@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../api/apiClient';
 import Spinner from '../../components/ui/Spinner';
 import Button from '../../components/ui/Button';
@@ -7,6 +8,7 @@ import Input from '../../components/ui/Input';
 
 const EnhancedClaimStatus = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -183,64 +185,68 @@ const EnhancedClaimStatus = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'
+      }`}>
         <div className="text-center">
           <Spinner size="large" />
-          <p className="mt-4 text-gray-600">Loading your claims...</p>
+          <p className={`mt-4 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading your claims...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className={`min-h-screen p-6 transition-colors duration-300 ${
+      isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'
+    }`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">📋 My Claims Dashboard</h1>
-          <p className="text-xl text-gray-600">
+          <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>📋 My Claims Dashboard</h1>
+          <p className={`text-xl ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
             Welcome back, {user?.firstName || user?.username}! Track all your insurance claims here.
           </p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+          <div className={`rounded-2xl shadow-lg p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="text-4xl mb-2">📊</div>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalClaims}</div>
-            <div className="text-gray-600">Total Claims</div>
+            <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{stats.totalClaims}</div>
+            <div className={isDark ? 'text-slate-300' : 'text-gray-600'}>Total Claims</div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+          <div className={`rounded-2xl shadow-lg p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="text-4xl mb-2">✅</div>
             <div className="text-3xl font-bold text-green-600">{stats.approvedClaims}</div>
-            <div className="text-gray-600">Approved</div>
+            <div className={isDark ? 'text-slate-300' : 'text-gray-600'}>Approved</div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+          <div className={`rounded-2xl shadow-lg p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="text-4xl mb-2">⏳</div>
             <div className="text-3xl font-bold text-yellow-600">{stats.pendingClaims}</div>
-            <div className="text-gray-600">Under Review</div>
+            <div className={isDark ? 'text-slate-300' : 'text-gray-600'}>Under Review</div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+          <div className={`rounded-2xl shadow-lg p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="text-4xl mb-2">🤖</div>
             <div className="text-3xl font-bold text-blue-600">{stats.aiApprovedCount}</div>
-            <div className="text-gray-600">AI Approved</div>
+            <div className={isDark ? 'text-slate-300' : 'text-gray-600'}>AI Approved</div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+          <div className={`rounded-2xl shadow-lg p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="text-4xl mb-2">💰</div>
             <div className="text-3xl font-bold text-green-600">${stats.totalApprovedAmount.toLocaleString()}</div>
-            <div className="text-gray-600">Total Paid</div>
+            <div className={isDark ? 'text-slate-300' : 'text-gray-600'}>Total Paid</div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className={`rounded-2xl shadow-lg p-6 mb-8 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">🔍 Search Claims</label>
+              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>🔍 Search Claims</label>
               <Input
                 type="text"
                 placeholder="Search by claim number, type, or description..."
@@ -251,7 +257,7 @@ const EnhancedClaimStatus = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">📊 Filter by Status</label>
+              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>📊 Filter by Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -278,10 +284,10 @@ const EnhancedClaimStatus = () => {
 
         {/* Claims List */}
         {filteredClaims.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+          <div className={`rounded-2xl shadow-lg p-12 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="text-8xl mb-6">📋</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">No Claims Found</h3>
-            <p className="text-gray-600 mb-8">
+            <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>No Claims Found</h3>
+            <p className={`mb-8 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
               {searchTerm || statusFilter !== 'all' 
                 ? 'No claims match your search criteria.' 
                 : "You haven't submitted any claims yet. Submit your first claim to get started!"}
@@ -296,14 +302,14 @@ const EnhancedClaimStatus = () => {
         ) : (
           <div className="space-y-6">
             {filteredClaims.map((claim) => (
-              <div key={claim.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <div key={claim.id} className={`rounded-2xl shadow-lg overflow-hidden transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
                 <div className="p-6">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
                     <div className="flex items-center space-x-4 mb-4 lg:mb-0">
                       <div className="text-4xl">{getTypeIcon(claim.type)}</div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">{claim.claimNumber}</h3>
-                        <p className="text-gray-600">{claim.type.replace('_', ' ')} Insurance Claim</p>
+                        <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{claim.claimNumber}</h3>
+                        <p className={isDark ? 'text-slate-300' : 'text-gray-600'}>{claim.type.replace('_', ' ')} Insurance Claim</p>
                       </div>
                     </div>
                     
@@ -321,8 +327,8 @@ const EnhancedClaimStatus = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
                     <div>
-                      <div className="text-sm text-gray-500">Claim Amount</div>
-                      <div className="text-lg font-semibold text-gray-900">${claim.claimAmount.toLocaleString()}</div>
+                      <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Claim Amount</div>
+                      <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>${claim.claimAmount.toLocaleString()}</div>
                     </div>
                     
                     {claim.approvedAmount && (
@@ -333,38 +339,38 @@ const EnhancedClaimStatus = () => {
                     )}
                     
                     <div>
-                      <div className="text-sm text-gray-500">Incident Date</div>
-                      <div className="text-lg font-semibold text-gray-900">{formatDate(claim.incidentDate)}</div>
+                      <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Incident Date</div>
+                      <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatDate(claim.incidentDate)}</div>
                     </div>
                     
                     <div>
-                      <div className="text-sm text-gray-500">Submitted</div>
-                      <div className="text-lg font-semibold text-gray-900">{formatDate(claim.createdAt)}</div>
+                      <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Submitted</div>
+                      <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatDate(claim.createdAt)}</div>
                     </div>
                   </div>
 
                   <div className="mb-4">
-                    <div className="text-sm text-gray-500 mb-1">Location</div>
-                    <div className="text-gray-900">{claim.incidentLocation}</div>
+                    <div className={`text-sm mb-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Location</div>
+                    <div className={isDark ? 'text-white' : 'text-gray-900'}>{claim.incidentLocation}</div>
                   </div>
 
                   <div className="mb-4">
-                    <div className="text-sm text-gray-500 mb-1">Description</div>
-                    <div className="text-gray-900">{claim.incidentDescription}</div>
+                    <div className={`text-sm mb-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Description</div>
+                    <div className={isDark ? 'text-white' : 'text-gray-900'}>{claim.incidentDescription}</div>
                   </div>
 
                   {claim.aiConfidenceScore && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div className={`grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 p-4 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
                       <div className="text-center">
-                        <div className="text-sm text-gray-500">AI Confidence</div>
+                        <div className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>AI Confidence</div>
                         <div className="text-lg font-semibold text-blue-600">{claim.aiConfidenceScore}%</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-sm text-gray-500">Fraud Risk</div>
+                        <div className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>Fraud Risk</div>
                         <div className="text-lg font-semibold text-red-600">{claim.fraudScore}%</div>
                       </div>
                       <div className="text-center col-span-2 md:col-span-1">
-                        <div className="text-sm text-gray-500">Processing</div>
+                        <div className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>Processing</div>
                         <div className="text-lg font-semibold text-purple-600">
                           {claim.autoApproved ? 'Automated' : 'Manual'}
                         </div>
@@ -405,15 +411,15 @@ const EnhancedClaimStatus = () => {
         {/* Claim Details Modal */}
         {showDetails && selectedClaim && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-200">
+            <div className={`rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+              <div className={`p-6 border-b transition-colors duration-300 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                 <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     {getTypeIcon(selectedClaim.type)} Claim Details - {selectedClaim.claimNumber}
                   </h2>
                   <button
                     onClick={() => setShowDetails(false)}
-                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                    className={`text-2xl ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
                   >
                     ✕
                   </button>
@@ -423,10 +429,10 @@ const EnhancedClaimStatus = () => {
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">📋 Claim Information</h3>
+                    <h3 className={`text-lg font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>📋 Claim Information</h3>
                     <div className="space-y-3">
                       <div>
-                        <span className="text-sm text-gray-500">Status:</span>
+                        <span className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Status:</span>
                         <div className={`inline-block ml-2 px-3 py-1 rounded-lg border font-semibold ${getStatusColor(selectedClaim.status)}`}>
                           {getStatusIcon(selectedClaim.status)} {selectedClaim.status.replace('_', ' ')}
                         </div>
@@ -520,7 +526,7 @@ const EnhancedClaimStatus = () => {
                 )}
               </div>
               
-              <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className={`p-6 border-t transition-colors duration-300 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-gray-200 bg-gray-50'}`}>
                 <div className="flex justify-end space-x-3">
                   <Button
                     onClick={() => setShowDetails(false)}

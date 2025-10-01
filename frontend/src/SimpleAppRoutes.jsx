@@ -14,6 +14,8 @@ import Chatbot from './pages/chatbot/Chatbot';
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
 import TestPage from './pages/TestPage';
 
+// Theme removed: using light-mode styles only
+
 function SimpleAppRoutes() {
   return (
     <Router>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+// ThemeContext removed: using light-mode styles only
 
 const DynamicAnalyticsDashboard = () => {
+  // dark theme removed; component uses light-mode Tailwind classes
   const [analytics, setAnalytics] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -98,16 +100,16 @@ const DynamicAnalyticsDashboard = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="shadow rounded-lg p-6 mb-6 bg-white">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Dynamic Analytics Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="mt-2 text-gray-600">
                 Role: <span className="font-semibold text-blue-600">{userRole}</span> | 
                 User: <span className="font-semibold">{analytics?.username}</span>
               </p>
@@ -115,21 +117,21 @@ const DynamicAnalyticsDashboard = () => {
             <div className="flex space-x-2">
               <button 
                 onClick={() => exportAnalytics('PDF')}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                className="px-4 py-2 rounded transition-colors bg-blue-500 text-white hover:bg-blue-600"
               >
                 Export PDF
               </button>
               <button 
                 onClick={() => exportAnalytics('Excel')}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                className="px-4 py-2 rounded transition-colors bg-green-500 text-white hover:bg-green-600"
               >
                 Export Excel
               </button>
               <button 
-                onClick={fetchComprehensiveAnalytics}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                onClick={() => fetchSpecificAnalytics('realtime')}
+                className="px-4 py-2 rounded transition-colors bg-red-500 text-white hover:bg-red-600"
               >
-                Refresh
+                Real-time Data
               </button>
             </div>
           </div>
@@ -138,22 +140,22 @@ const DynamicAnalyticsDashboard = () => {
         {/* Admin-Specific Analytics */}
         {userRole === 'ADMIN' && analytics?.adminAnalytics && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">System Overview</h2>
-              <div className="space-y-3">
+            <div className="shadow rounded-lg p-6 bg-white">
+                <h2 className="text-xl font-semibold mb-4">System Overview</h2>
+                  <div className="space-y-3">
                 {Object.entries(analytics.adminAnalytics).map(([key, value]) => (
                   <div key={key} className="flex justify-between">
-                    <span className="text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                      <span className="capitalize text-gray-600">{key.replace(/([A-Z])/g, ' $1')}</span>
                     <span className="font-semibold">{JSON.stringify(value)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="shadow rounded-lg p-6 bg-white">
               <h2 className="text-xl font-semibold mb-4">Broker Performance</h2>
               {analytics?.brokerAggregatedAnalytics && (
-                <div className="space-y-3">
+                  <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Brokers</span>
                     <span className="font-semibold">{analytics.brokerAggregatedAnalytics.totalBrokers}</span>
@@ -187,12 +189,12 @@ const DynamicAnalyticsDashboard = () => {
         {/* Broker-Specific Analytics */}
         {userRole === 'BROKER' && analytics?.brokerAnalytics && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="shadow rounded-lg p-6 bg-white">
               <h2 className="text-xl font-semibold mb-4">My Performance</h2>
               <div className="space-y-3">
                 {analytics.brokerAnalytics.revenueByMonth && (
                   <div>
-                    <h3 className="font-medium text-gray-700 mb-2">Monthly Revenue</h3>
+                    <h3 className="font-medium mb-2 text-gray-700">Monthly Revenue</h3>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       {Object.entries(analytics.brokerAnalytics.revenueByMonth).map(([month, revenue]) => (
                         <div key={month} className="flex justify-between">
@@ -206,10 +208,10 @@ const DynamicAnalyticsDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="shadow rounded-lg p-6 bg-white">
               <h2 className="text-xl font-semibold mb-4">Market Context</h2>
               {analytics?.systemContext?.marketTrends && (
-                <div className="space-y-3">
+                  <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Growth Rate</span>
                     <span className="font-semibold text-green-600">
@@ -234,12 +236,12 @@ const DynamicAnalyticsDashboard = () => {
 
         {/* System Analytics (Common) */}
         {analytics?.systemAnalytics && (
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">System Analytics</h2>
+          <div className={`shadow rounded-lg p-6 mb-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : ''}`}>System Analytics</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {analytics.systemAnalytics.revenueTrends && (
                 <div>
-                  <h3 className="font-medium text-gray-700 mb-2">Revenue Trends</h3>
+                  <h3 className={`font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Revenue Trends</h3>
                   <div className="text-2xl font-bold text-green-600">
                                       Monthly Revenue:
                     ₹{analytics.systemAnalytics.revenueTrends.monthlyRevenue ? 
@@ -250,7 +252,7 @@ const DynamicAnalyticsDashboard = () => {
               
               {analytics.systemAnalytics.policyTrends && (
                 <div>
-                  <h3 className="font-medium text-gray-700 mb-2">Policy Trends</h3>
+                  <h3 className={`font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Policy Trends</h3>
                   <div className="text-2xl font-bold text-blue-600">
                     {Object.keys(analytics.systemAnalytics.policyTrends).length} Metrics
                   </div>
@@ -259,7 +261,7 @@ const DynamicAnalyticsDashboard = () => {
               
               {analytics.systemAnalytics.performanceMetrics && (
                 <div>
-                  <h3 className="font-medium text-gray-700 mb-2">Performance</h3>
+                  <h3 className={`font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Performance</h3>
                   <div className="text-2xl font-bold text-purple-600">
                     {analytics.systemAnalytics.performanceMetrics.policyApprovalRate || 'N/A'}%
                   </div>
@@ -270,24 +272,24 @@ const DynamicAnalyticsDashboard = () => {
         )}
 
         {/* Quick Actions */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+        <div className={`shadow rounded-lg p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+          <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : ''}`}>Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <button 
               onClick={() => fetchSpecificAnalytics('trends')}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              className={`px-4 py-2 rounded transition-colors ${isDark ? 'bg-blue-700 text-white hover:bg-blue-600' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
             >
               View Trends
             </button>
             <button 
               onClick={() => fetchSpecificAnalytics('revenue')}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              className={`px-4 py-2 rounded transition-colors ${isDark ? 'bg-green-700 text-white hover:bg-green-600' : 'bg-green-500 text-white hover:bg-green-600'}`}
             >
               Revenue Details
             </button>
             <button 
               onClick={() => fetchSpecificAnalytics('performance')}
-              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+              className={`px-4 py-2 rounded transition-colors ${isDark ? 'bg-purple-700 text-white hover:bg-purple-600' : 'bg-purple-500 text-white hover:bg-purple-600'}`}
             >
               Performance
             </button>
@@ -301,7 +303,7 @@ const DynamicAnalyticsDashboard = () => {
         </div>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-gray-500 text-sm">
+        <div className={`mt-6 text-center text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
           Last Updated: {new Date(analytics?.timestamp).toLocaleString()}
         </div>
       </div>

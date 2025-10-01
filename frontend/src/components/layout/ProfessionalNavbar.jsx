@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -95,18 +95,7 @@ const Navbar = () => {
 
           {/* Right Side Items */}
           <div className="flex items-center space-x-4">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-lg transition-all duration-200 ${
-                isDark
-                  ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
+            {/* Theme Toggle removed */}
 
             {/* User Actions */}
             {user ? (

@@ -348,14 +348,7 @@ function AppRoutes() {
               }
             />
             
-            <Route 
-              path="/admin/upload-policy" 
-              element={
-                <ProtectedRoute roles={['ADMIN']}>
-                  <BrokerUploadPolicy />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Admin upload route removed — upload is broker-only */}
             
             <Route 
               path="/admin/compare" 
@@ -416,7 +409,7 @@ function AppRoutes() {
             <Route 
               path="/broker/upload" 
               element={
-                <ProtectedRoute roles={['BROKER', 'ADMIN']}>
+                <ProtectedRoute roles={['BROKER']}>
                   <BrokerUploadPolicy />
                 </ProtectedRoute>
               } 

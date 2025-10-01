@@ -10,6 +10,7 @@ import { websocketService } from '../../api/websocketService';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import Modal from '../../components/ui/Modal';
+import { formatCurrency } from '../../utils/formatters';
 
 const UserDashboard = () => {
   const { user } = useAuth();
@@ -177,15 +178,13 @@ const UserDashboard = () => {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
+  const formatToINR = (amount) => {
+    const n = Number(amount) || 0;
+    return formatCurrency(n * 83, 'INR');
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -251,16 +250,16 @@ const UserDashboard = () => {
   }
 
   return (
-    <div className="user-dashboard min-h-screen bg-gray-50 p-6">
+    <div className={`user-dashboard min-h-screen p-6 transition-colors duration-300 ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Dashboard Header */}
-        <div className="dashboard-header bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className={`dashboard-header rounded-lg shadow-sm p-6 mb-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Welcome back, {user?.username || 'User'}!
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className={`mt-1 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                 Manage your insurance policies and claims with AI assistance
               </p>
             </div>
@@ -289,14 +288,14 @@ const UserDashboard = () => {
 
         <div className="dashboard-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* AI Quick Actions */}
-          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
+          <div className={`dashboard-card rounded-lg shadow-sm p-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
                 🤖
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">AI Assistant</h3>
-                <p className="text-sm text-gray-600">Get instant help with insurance questions</p>
+                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>AI Assistant</h3>
+                <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Get instant help with insurance questions</p>
               </div>
             </div>
             <div className="card-actions space-y-2">
@@ -319,26 +318,26 @@ const UserDashboard = () => {
           </div>
 
           {/* Policies Overview */}
-          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
+          <div className={`dashboard-card rounded-lg shadow-sm p-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${isDark ? 'bg-green-900/30' : 'bg-green-100'}`}>
                 📋
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">My Policies</h3>
+              <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>My Policies</h3>
             </div>
             <div className="policies-summary">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="summary-stat text-center">
-                  <span className="stat-number text-2xl font-bold text-gray-900 block">
+                  <span className={`stat-number text-2xl font-bold block ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     {dashboardData.totalPolicies}
                   </span>
-                  <span className="stat-label text-xs text-gray-600">Total Policies</span>
+                  <span className={`stat-label text-xs ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Total Policies</span>
                 </div>
                 <div className="summary-stat text-center">
                   <span className="stat-number text-2xl font-bold text-green-600 block">
                     {dashboardData.activePolicies}
                   </span>
-                  <span className="stat-label text-xs text-gray-600">Active</span>
+                  <span className={`stat-label text-xs ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Active</span>
                 </div>
               </div>
               <div className="summary-stat text-center mb-4">
@@ -366,26 +365,26 @@ const UserDashboard = () => {
           </div>
 
           {/* Claims Overview */}
-          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
+          <div className={`dashboard-card rounded-lg shadow-sm p-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${isDark ? 'bg-purple-900/30' : 'bg-purple-100'}`}>
                 🏥
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Recent Claims</h3>
+              <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Recent Claims</h3>
             </div>
             <div className="claims-summary mb-4">
               <div className="grid grid-cols-3 gap-2 mb-3">
                 <div className="summary-stat text-center">
-                  <span className="stat-number text-lg font-bold text-gray-900 block">
+                  <span className={`stat-number text-lg font-bold block ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     {dashboardData.totalClaims}
                   </span>
-                  <span className="stat-label text-xs text-gray-600">Total</span>
+                  <span className={`stat-label text-xs ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Total</span>
                 </div>
                 <div className="summary-stat text-center">
                   <span className="stat-number text-lg font-bold text-green-600 block">
                     {dashboardData.approvedClaims}
                   </span>
-                  <span className="stat-label text-xs text-gray-600">Approved</span>
+                  <span className={`stat-label text-xs ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Approved</span>
                 </div>
                 <div className="summary-stat text-center">
                   <span className="stat-number text-lg font-bold text-orange-600 block">
@@ -404,7 +403,7 @@ const UserDashboard = () => {
                           #{claim.claimNumber || claim.id || `CLAIM-${index + 1}`}
                         </span>
                         <span className="claim-amount text-gray-600">
-                          {formatCurrency(claim.amount)}
+                          {formatToINR(claim.amount)}
                         </span>
                       </div>
                       <div className="claim-status">
@@ -445,8 +444,8 @@ const UserDashboard = () => {
         {/* Additional Dashboard Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {/* Quick Actions */}
-          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">⚡ Quick Actions</h3>
+          <div className={`dashboard-card rounded-lg shadow-sm p-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+            <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>⚡ Quick Actions</h3>
             <div className="quick-actions-grid grid grid-cols-2 gap-3">
               <Button 
                 onClick={() => navigate('/submit-claim')}
@@ -485,8 +484,8 @@ const UserDashboard = () => {
           </div>
 
           {/* AI Insights */}
-          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">🧠 AI Insights</h3>
+          <div className={`dashboard-card rounded-lg shadow-sm p-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+            <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>🧠 AI Insights</h3>
             <div className="insights-content space-y-3">
               {dashboardData.aiStatus?.status === 'healthy' ? (
                 <>
@@ -527,8 +526,8 @@ const UserDashboard = () => {
 
         {/* Recent Activity & Summary Statistics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Recent Activity</h3>
+          <div className={`dashboard-card rounded-lg shadow-sm p-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+            <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>📈 Recent Activity</h3>
             <div className="activity-list space-y-3">
               {dashboardData.recentActivities.length > 0 ? (
                 dashboardData.recentActivities.slice(0, 4).map((activity, index) => (
@@ -540,7 +539,7 @@ const UserDashboard = () => {
                       <p className="font-medium text-gray-900">{activity.action}</p>
                       <small className="text-gray-600">
                         {formatDate(activity.date)}
-                        {activity.amount && ` - ${formatCurrency(activity.amount)}`}
+                        {activity.amount && ` - ${formatToINR(activity.amount)}`}
                       </small>
                     </div>
                     {activity.status && (
@@ -568,16 +567,16 @@ const UserDashboard = () => {
             </div>
           </div>
 
-          <div className="dashboard-card bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Financial Overview</h3>
+          <div className={`dashboard-card rounded-lg shadow-sm p-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+            <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>💰 Financial Overview</h3>
             <div className="financial-stats space-y-4">
               <div className="stat-row flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                 <div>
                   <p className="text-sm text-blue-700 font-medium">Total Premium Paid</p>
                   <p className="text-xs text-blue-600">Lifetime payments</p>
                 </div>
-                <span className="text-lg font-bold text-blue-800">
-                  {formatCurrency(dashboardData.totalPremiumPaid)}
+                  <span className="text-lg font-bold text-blue-800">
+                  {formatToINR(dashboardData.totalPremiumPaid)}
                 </span>
               </div>
               
@@ -587,7 +586,7 @@ const UserDashboard = () => {
                   <p className="text-xs text-green-600">Current month</p>
                 </div>
                 <span className="text-lg font-bold text-green-800">
-                  {formatCurrency(dashboardData.monthlyPremium)}
+                  {formatToINR(dashboardData.monthlyPremium)}
                 </span>
               </div>
 
@@ -597,7 +596,7 @@ const UserDashboard = () => {
                   <p className="text-xs text-purple-600">Protection amount</p>
                 </div>
                 <span className="text-lg font-bold text-purple-800">
-                  {formatCurrency(dashboardData.totalCoverage)}
+                  {formatToINR(dashboardData.totalCoverage)}
                 </span>
               </div>
 

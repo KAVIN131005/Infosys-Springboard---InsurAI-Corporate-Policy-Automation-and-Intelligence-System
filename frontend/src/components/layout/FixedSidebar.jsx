@@ -1,22 +1,24 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../context/ThemeContext';
 
 const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const { isDark } = useTheme();
 
   // Define navigation items for each role
   const getNavigationItems = () => {
     const role = user?.role;
     
-    if (role === 'ADMIN') {
+        if (role === 'ADMIN') {
       // Admin sidebar: focus on system-wide controls and approvals
       return [
         { path: '/admin/dashboard', label: 'Admin Dashboard', icon: '📊' },
         { path: '/admin/policies', label: 'Manage Policies', icon: '📋' },
         { path: '/admin/approvals', label: 'Policy Approvals', icon: '✅' },
         { path: '/admin/claim-approvals', label: 'Claim Approvals', icon: '🔍' },
-        { path: '/admin/upload-policy', label: 'Upload Policy', icon: '📤' },
+            // Removed admin upload-policy link — upload is broker-only
         { path: '/analytics', label: 'Analytics', icon: '📈' },
         { path: '/chatbot', label: 'AI Assistant', icon: '🤖' },
       ];
@@ -51,14 +53,14 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="hidden md:block w-64 bg-white border-r border-gray-200 shadow-sm min-h-screen">
+    <aside className={`hidden md:block w-64 shadow-sm min-h-screen border-r ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
       <div className="p-4">
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">
+          <h2 className={`text-lg font-semibold mb-2 ${isDark ? 'text-slate-200' : 'text-gray-800'}`}>
             {user?.role === 'ADMIN' ? 'Admin Panel' : 
              user?.role === 'BROKER' ? 'Broker Panel' : 'User Panel'}
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
             Welcome, {user?.firstName || user?.username}
           </p>
         </div>
@@ -70,8 +72,8 @@ const Sidebar = () => {
               to={item.path}
               className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 group ${
                 isActivePath(item.path)
-                  ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-500'
-                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                  ? isDark ? 'bg-blue-800 text-blue-200 border-r-2 border-blue-400' : 'bg-blue-100 text-blue-700 border-r-2 border-blue-500'
+                  : isDark ? 'text-slate-300 hover:bg-slate-800 hover:text-blue-300' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
               }`}
             >
               <span className={`mr-3 text-lg transition-transform duration-200 ${
@@ -85,8 +87,8 @@ const Sidebar = () => {
         </nav>
 
         {/* Quick Actions Section */}
-        <div className="mt-8 pt-4 border-t border-gray-200">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+        <div className={`mt-8 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+          <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
             Quick Actions
           </h3>
           <div className="space-y-2">
@@ -159,7 +161,7 @@ const Sidebar = () => {
             </span>
             {user?.role}
           </div>
-          <div className="text-xs text-gray-500 mt-2">
+          <div className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
             {user?.role === 'ADMIN' ? 'System Administrator' :
              user?.role === 'BROKER' ? 'Insurance Broker' :
              'Policy Holder'}
@@ -167,10 +169,10 @@ const Sidebar = () => {
         </div>
 
         {/* Help Section */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className={`mt-6 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
           <Link
             to="/chatbot"
-            className="flex items-center px-3 py-2 text-xs font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200"
+            className={`flex items-center px-3 py-2 text-xs font-medium transition-colors duration-200 ${isDark ? 'text-slate-400 hover:text-blue-400' : 'text-gray-600 hover:text-blue-600'}`}
           >
             <span className="mr-2">💬</span>
             Need Help? Chat with AI

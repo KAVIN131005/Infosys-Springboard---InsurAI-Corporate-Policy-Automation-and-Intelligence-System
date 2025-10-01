@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import { getAvailablePolicies, getPolicyById } from '../../api/policyService';
 import { applyForPolicy } from '../../api/userPolicyService';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,6 +10,7 @@ import Modal from '../../components/ui/Modal';
 import Spinner from '../../components/ui/Spinner';
 
 const PolicyView = () => {
+  const { isDark } = useTheme();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -162,13 +164,21 @@ const PolicyView = () => {
               ← Back to Policies
             </Button>
             
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className={`rounded-lg shadow-md p-6 ${
+              isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'
+            }`}>
               <PolicyDetails policy={policy} />
               
               {user && user.role === 'USER' && (
-                <div className="mt-6 pt-6 border-t">
-                  <h3 className="text-lg font-semibold mb-4">Apply for this Policy</h3>
-                  <p className="text-gray-600 mb-4">
+                <div className={`mt-6 pt-6 ${
+                  isDark ? 'border-t border-slate-700' : 'border-t'
+                }`}>
+                  <h3 className={`text-lg font-semibold mb-4 ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>Apply for this Policy</h3>
+                  <p className={`mb-4 ${
+                    isDark ? 'text-slate-300' : 'text-gray-600'
+                  }`}>
                     Ready to get protected? Click the button below to start your application.
                   </p>
                   <Button 
@@ -437,8 +447,12 @@ const PolicyView = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Available Policies</h1>
-        <p className="text-gray-600 mt-2">Browse and apply for insurance policies that meet your needs.</p>
+        <h1 className={`text-3xl font-bold ${
+          isDark ? 'text-white' : 'text-gray-900'
+        }`}>Available Policies</h1>
+        <p className={`mt-2 ${
+          isDark ? 'text-slate-300' : 'text-gray-600'
+        }`}>Browse and apply for insurance policies that meet your needs.</p>
       </div>
 
       {error && (
@@ -449,24 +463,36 @@ const PolicyView = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {policies.map((policy) => (
-          <div key={policy.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+          <div key={policy.id} className={`rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow ${
+            isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'
+          }`}>
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">{policy.name}</h3>
-              <p className="text-sm text-gray-500">{policy.type}</p>
+              <h3 className={`text-lg font-semibold ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>{policy.name}</h3>
+              <p className={`text-sm ${
+                isDark ? 'text-slate-400' : 'text-gray-500'
+              }`}>{policy.type}</p>
             </div>
             
             <div className="mb-4">
-              <p className="text-gray-600 text-sm line-clamp-3">{policy.description}</p>
+              <p className={`text-sm line-clamp-3 ${
+                isDark ? 'text-slate-300' : 'text-gray-600'
+              }`}>{policy.description}</p>
             </div>
             
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Monthly Premium:</span>
-                <span className="font-semibold">${policy.monthlyPremium}</span>
+                <span className={isDark ? 'text-slate-400' : 'text-gray-500'}>Monthly Premium:</span>
+                <span className={`font-semibold ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>${policy.monthlyPremium}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Coverage:</span>
-                <span className="font-semibold">${policy.coverage?.toLocaleString()}</span>
+                <span className={isDark ? 'text-slate-400' : 'text-gray-500'}>Coverage:</span>
+                <span className={`font-semibold ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>${policy.coverage?.toLocaleString()}</span>
               </div>
             </div>
             

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import ClaimCard from '../../components/claim/ClaimCard';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -7,6 +8,7 @@ import Spinner from '../../components/ui/Spinner';
 
 const ClaimStatus = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,60 +148,64 @@ const ClaimStatus = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gray-50'
+      }`}>
         <div className="text-center">
           <Spinner size="large" />
-          <p className="mt-4 text-gray-600">Loading your claims...</p>
+          <p className={`mt-4 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading your claims...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className={`min-h-screen p-6 transition-colors duration-300 ${
+      isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gray-50'
+    }`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">📋 Claim Status</h1>
-          <p className="text-gray-600">
+          <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>📋 Claim Status</h1>
+          <p className={isDark ? 'text-slate-300' : 'text-gray-600'}>
             Welcome, {user?.firstName || user?.username}! Track and manage your insurance claims.
           </p>
         </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className={`rounded-lg shadow p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
             <div className="text-3xl mb-2">📊</div>
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-sm text-gray-600">Total Claims</div>
+            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{stats.total}</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Total Claims</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className={`rounded-lg shadow p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
             <div className="text-3xl mb-2">⏳</div>
             <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
-            <div className="text-sm text-gray-600">Pending</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Pending</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className={`rounded-lg shadow p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
             <div className="text-3xl mb-2">👁️</div>
             <div className="text-2xl font-bold text-yellow-600">{stats.review}</div>
-            <div className="text-sm text-gray-600">Under Review</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Under Review</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className={`rounded-lg shadow p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
             <div className="text-3xl mb-2">✅</div>
             <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-            <div className="text-sm text-gray-600">Approved</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Approved</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className={`rounded-lg shadow p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
             <div className="text-3xl mb-2">💰</div>
-            <div className="text-2xl font-bold text-gray-900">${stats.totalAmount.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Total Amount</div>
+            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>${stats.totalAmount.toLocaleString()}</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Total Amount</div>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className={`rounded-lg shadow p-6 mb-8 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Claims</label>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Search Claims</label>
               <Input
                 type="text"
                 placeholder="Search by ID, type, or description..."
@@ -208,11 +214,13 @@ const ClaimStatus = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Status Filter</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isDark ? 'bg-slate-700 border border-slate-600 text-white' : 'border border-gray-300'
+                }`}
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending Review</option>
@@ -221,11 +229,13 @@ const ClaimStatus = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Sort By</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isDark ? 'bg-slate-700 border border-slate-600 text-white' : 'border border-gray-300'
+                }`}
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -247,10 +257,10 @@ const ClaimStatus = () => {
 
         {/* Claims List */}
         {filteredClaims.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
+          <div className={`rounded-lg shadow p-12 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
             <div className="text-6xl mb-4">📋</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Claims Found</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>No Claims Found</h3>
+            <p className={`mb-6 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
               {searchTerm || statusFilter !== 'all' 
                 ? 'No claims match your search criteria.' 
                 : "You haven't submitted any claims yet."}
@@ -271,39 +281,39 @@ const ClaimStatus = () => {
         )}
 
         {/* Quick Actions */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🚀 Quick Actions</h3>
+        <div className={`mt-8 rounded-lg shadow p-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
+          <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>🚀 Quick Actions</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button
               onClick={() => window.location.href = '/submit-claim'}
-              className="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors"
+              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDark ? 'bg-blue-900/30 hover:bg-blue-900/50 text-blue-300' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'}`}
             >
               <span className="text-2xl mr-2">📝</span>
               <div className="text-left">
-                <div className="font-medium">Submit New Claim</div>
-                <div className="text-sm">Start a new claim process</div>
+                <div className={isDark ? 'font-medium text-white' : 'font-medium'}>Submit New Claim</div>
+                <div className={`text-sm ${isDark ? 'text-slate-300' : ''}`}>Start a new claim process</div>
               </div>
             </Button>
 
             <Button
               onClick={() => window.location.href = '/policies'}
-              className="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors"
+              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDark ? 'bg-green-900/30 hover:bg-green-900/50 text-green-300' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
             >
               <span className="text-2xl mr-2">📋</span>
               <div className="text-left">
-                <div className="font-medium">View Policies</div>
-                <div className="text-sm">Review your policies</div>
+                <div className={isDark ? 'font-medium text-white' : 'font-medium'}>View Policies</div>
+                <div className={`text-sm ${isDark ? 'text-slate-300' : ''}`}>Review your policies</div>
               </div>
             </Button>
 
             <Button
               onClick={() => window.location.href = '/chatbot'}
-              className="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition-colors"
+              className={`flex items-center justify-center p-4 rounded-lg transition-colors ${isDark ? 'bg-purple-900/30 hover:bg-purple-900/50 text-purple-300' : 'bg-purple-50 hover:bg-purple-100 text-purple-700'}`}
             >
               <span className="text-2xl mr-2">🤖</span>
               <div className="text-left">
-                <div className="font-medium">AI Assistant</div>
-                <div className="text-sm">Get help with claims</div>
+                <div className={isDark ? 'font-medium text-white' : 'font-medium'}>AI Assistant</div>
+                <div className={`text-sm ${isDark ? 'text-slate-300' : ''}`}>Get help with claims</div>
               </div>
             </Button>
           </div>

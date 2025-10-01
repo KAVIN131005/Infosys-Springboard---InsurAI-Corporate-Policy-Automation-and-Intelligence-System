@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import PolicyCard from '../../components/policy/PolicyCard';
 import { getPolicies, getBrokerPolicies } from '../../api/policyService';
 import axios from 'axios';
@@ -25,6 +26,7 @@ policyClient.interceptors.request.use((config) => {
 
 const BrokerPolicies = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [policies, setPolicies] = useState([]);
   const [filteredPolicies, setFilteredPolicies] = useState([]);
   const [loading, setLoading] = useState(true);

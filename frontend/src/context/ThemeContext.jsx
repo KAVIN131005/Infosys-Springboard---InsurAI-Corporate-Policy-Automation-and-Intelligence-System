@@ -11,35 +11,19 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(() => {
-    // Check localStorage for saved theme preference
-    const savedTheme = localStorage.getItem('insurAI-theme');
-    return savedTheme || 'light';
-  });
+  // Force light theme permanently. Keep provider to avoid changing many files.
+  const [theme, setTheme] = useState('light');
 
   useEffect(() => {
-    // Save theme preference to localStorage
-    localStorage.setItem('insurAI-theme', theme);
-    
-    // Apply theme class to document body
-    document.body.className = '';
-    document.body.classList.add(`theme-${theme}`);
-    
-    // Update CSS custom properties based on theme
-    const root = document.documentElement;
-    
-    if (theme === 'dark') {
-      root.style.setProperty('--bg-primary', '#0f172a');
-      root.style.setProperty('--bg-secondary', '#1e293b');
-      root.style.setProperty('--bg-tertiary', '#334155');
-      root.style.setProperty('--text-primary', '#f8fafc');
-      root.style.setProperty('--text-secondary', '#e2e8f0');
-      root.style.setProperty('--text-muted', '#94a3b8');
-      root.style.setProperty('--border-color', '#475569');
-      root.style.setProperty('--blue-primary', '#3b82f6');
-      root.style.setProperty('--blue-secondary', '#1d4ed8');
-      root.style.setProperty('--blue-accent', '#60a5fa');
-    } else {
+    // Always enforce light theme styles. Keep DOM classes stable for any CSS relying on them.
+    try {
+      const html = document.documentElement;
+      const body = document.body;
+      html.classList.remove('dark');
+      body.classList.remove('theme-dark');
+      if (!html.classList.contains('light')) html.classList.add('light');
+      if (!body.classList.contains('theme-light')) body.classList.add('theme-light');
+      const root = document.documentElement;
       root.style.setProperty('--bg-primary', '#ffffff');
       root.style.setProperty('--bg-secondary', '#f8fafc');
       root.style.setProperty('--bg-tertiary', '#f1f5f9');
@@ -50,18 +34,19 @@ export const ThemeProvider = ({ children }) => {
       root.style.setProperty('--blue-primary', '#3b82f6');
       root.style.setProperty('--blue-secondary', '#1d4ed8');
       root.style.setProperty('--blue-accent', '#60a5fa');
+    } catch (err) {
+      // ignore if running outside browser environment (SSR/tests)
     }
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
+  // No-op toggle to keep API surface but prevent switching to dark mode
+  const toggleTheme = () => {};
 
   const value = {
     theme,
     toggleTheme,
-    isDark: theme === 'dark',
-    isLight: theme === 'light'
+    isDark: false,
+    isLight: true
   };
 
   return (

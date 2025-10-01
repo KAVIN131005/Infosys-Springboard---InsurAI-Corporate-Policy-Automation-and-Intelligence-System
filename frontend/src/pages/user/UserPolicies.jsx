@@ -59,9 +59,9 @@ const UserPolicies = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen bg-gray-50">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold mb-2 text-gray-900">
           📋 Available Insurance Policies
         </h1>
         <p className="text-gray-600">
@@ -71,8 +71,8 @@ const UserPolicies = () => {
 
       {/* User's Applied Policies Section */}
       {userPolicies.length > 0 && (
-        <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">📄 Your Policy Applications & Active Policies</h2>
+        <div className="mb-8 p-6 rounded-lg shadow-md bg-white">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">📄 Your Policy Applications & Active Policies</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {userPolicies.map((userPolicy) => {
               const getStatusInfo = (status) => {
@@ -96,7 +96,7 @@ const UserPolicies = () => {
               
               const statusInfo = getStatusInfo(userPolicy.status);
               
-              return (
+                return (
                 <div key={userPolicy.id} className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
                   userPolicy.status === 'ACTIVE' ? 'bg-green-50 border-green-200' :
                   userPolicy.status === 'PENDING_APPROVAL' ? 'bg-yellow-50 border-yellow-200' :
@@ -173,11 +173,11 @@ const UserPolicies = () => {
                       <div className="flex space-x-2">
                         <Link
                           to={`/user/claims?policyId=${userPolicy.id}`}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-1 px-2 rounded text-xs font-medium transition-colors"
+                          className={`flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-1 px-2 rounded text-xs font-medium transition-colors`}
                         >
                           📝 File Claim
                         </Link>
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-xs font-medium transition-colors">
+                        <button className={`bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-xs font-medium transition-colors`}>
                           📄 View Policy
                         </button>
                       </div>
@@ -186,7 +186,7 @@ const UserPolicies = () => {
                       <div className="text-center">
                         <button 
                           onClick={() => alert('🕒 Your application is currently under review by our team. You will receive an email notification once the review is complete.')}
-                          className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded text-xs font-medium transition-colors"
+                          className={`bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded text-xs font-medium transition-colors`}
                         >
                           🕒 Check Status
                         </button>
@@ -196,7 +196,7 @@ const UserPolicies = () => {
                       <div className="text-center">
                         <Link
                           to="/user/policies"
-                          className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-xs font-medium transition-colors"
+                          className={`bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-xs font-medium transition-colors`}
                         >
                           🔄 Apply for Other Policies
                         </Link>
@@ -209,7 +209,7 @@ const UserPolicies = () => {
           </div>
           {userPolicies.length > 6 && (
             <div className="mt-4 text-center">
-              <Link to="/user/dashboard" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              <Link to="/user/dashboard" className={`${isDark ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'} text-sm font-medium`}>
                 View All Policies & Applications →
               </Link>
             </div>
@@ -218,7 +218,7 @@ const UserPolicies = () => {
       )}
 
       {/* Search and Filter */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+      <div className={`p-6 rounded-lg shadow-md mb-6 transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <input
@@ -226,14 +226,22 @@ const UserPolicies = () => {
               placeholder="Search policies..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300 ${
+                isDark
+                  ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
+                  : 'border-gray-300'
+              }`}
             />
           </div>
           <div className="md:w-48">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300 ${
+                isDark
+                  ? 'bg-slate-700 border-slate-600 text-white'
+                  : 'border-gray-300'
+              }`}
             >
               <option value="all">All Types</option>
               <option value="AUTO">Auto Insurance</option>
@@ -249,9 +257,9 @@ const UserPolicies = () => {
       {/* Available Policies Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredPolicies.map((policy) => (
-          <div key={policy.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+          <div key={policy.id} className={`p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 bg-white`}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">{policy.name}</h3>
+              <h3 className={`text-lg font-semibold text-gray-900`}>{policy.name}</h3>
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                 policy.type === 'AUTO' ? 'bg-blue-100 text-blue-800' :
                 policy.type === 'HEALTH' ? 'bg-green-100 text-green-800' :
@@ -324,9 +332,9 @@ const UserPolicies = () => {
 
       {filteredPolicies.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">📋</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Policies Found</h3>
-          <p className="text-gray-600">
+          <div className={`text-6xl mb-4 text-gray-400`}>📋</div>
+          <h3 className={`text-lg font-semibold mb-2 text-gray-900`}>No Policies Found</h3>
+          <p className={`text-gray-600`}>
             {searchTerm || filterType !== 'all' 
               ? 'Try adjusting your search criteria or filters.' 
               : 'No insurance policies are currently available.'}
@@ -335,8 +343,8 @@ const UserPolicies = () => {
       )}
 
       {/* Quick Actions */}
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">🚀 Quick Actions</h2>
+      <div className={`mt-8 p-6 rounded-lg shadow-md bg-white`}>
+        <h2 className={`text-xl font-semibold mb-4 text-gray-900`}>🚀 Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             to="/user/compare"

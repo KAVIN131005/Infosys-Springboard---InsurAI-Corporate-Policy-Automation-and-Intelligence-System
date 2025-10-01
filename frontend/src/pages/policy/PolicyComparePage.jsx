@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../context/ThemeContext';
+import { formatCurrency } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../api/apiClient';
 import Spinner from '../../components/ui/Spinner';
@@ -6,6 +8,7 @@ import Button from '../../components/ui/Button';
 
 const PolicyComparePage = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [policies, setPolicies] = useState([]);
   const [selectedPolicies, setSelectedPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,11 +158,9 @@ const PolicyComparePage = () => {
     setComparing(false);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
+  const formatToINR = (amount) => {
+    const n = Number(amount) || 0;
+    return formatCurrency(n * 83, 'INR');
   };
 
   if (loading) {
@@ -175,9 +176,9 @@ const PolicyComparePage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Compare Policies</h1>
-        <p className="text-gray-600">
+      <div className={`p-6 rounded-lg shadow transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+        <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Compare Policies</h1>
+        <p className={isDark ? 'text-slate-300' : 'text-gray-600'}>
           Select up to 3 policies to compare their features, coverage, and pricing side by side.
         </p>
         {error && (
@@ -188,13 +189,13 @@ const PolicyComparePage = () => {
       </div>
 
       {/* Selection Controls */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className={`p-6 rounded-lg shadow transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Select Policies ({selectedPolicies.length}/3)
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
               Choose policies to compare their features
             </p>
           </div>
@@ -248,11 +249,11 @@ const PolicyComparePage = () => {
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="text-gray-600">Monthly: </span>
-                      <span className="font-medium">{formatCurrency(policy.monthlyPremium)}</span>
+                      <span className="font-medium">{formatToINR(policy.monthlyPremium)}</span>
                     </div>
                     <div>
                       <span className="text-gray-600">Deductible: </span>
-                      <span className="font-medium">{formatCurrency(policy.deductible)}</span>
+                      <span className="font-medium">{formatToINR(policy.deductible)}</span>
                     </div>
                     <div>
                       <span className="text-gray-600">Status: </span>
@@ -272,9 +273,9 @@ const PolicyComparePage = () => {
 
       {/* Comparison Table */}
       {comparing && selectedPolicies.length >= 2 && (
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className={`p-6 rounded-lg shadow transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Policy Comparison
             </h2>
             <Button onClick={() => setComparing(false)} variant="outline">
@@ -316,7 +317,7 @@ const PolicyComparePage = () => {
                   <td className="border border-gray-200 p-3 font-medium text-gray-700">Monthly Premium</td>
                   {selectedPolicies.map((policy) => (
                     <td key={policy.id} className="border border-gray-200 p-3 font-semibold text-green-600">
-                      {formatCurrency(policy.monthlyPremium)}
+                      {formatToINR(policy.monthlyPremium)}
                     </td>
                   ))}
                 </tr>
@@ -324,7 +325,7 @@ const PolicyComparePage = () => {
                   <td className="border border-gray-200 p-3 font-medium text-gray-700">Yearly Premium</td>
                   {selectedPolicies.map((policy) => (
                     <td key={policy.id} className="border border-gray-200 p-3 font-semibold text-green-600">
-                      {formatCurrency(policy.yearlyPremium)}
+                      {formatToINR(policy.yearlyPremium)}
                     </td>
                   ))}
                 </tr>
@@ -332,7 +333,7 @@ const PolicyComparePage = () => {
                   <td className="border border-gray-200 p-3 font-medium text-gray-700">Deductible</td>
                   {selectedPolicies.map((policy) => (
                     <td key={policy.id} className="border border-gray-200 p-3">
-                      {formatCurrency(policy.deductible)}
+                      {formatToINR(policy.deductible)}
                     </td>
                   ))}
                 </tr>
@@ -365,7 +366,7 @@ const PolicyComparePage = () => {
                   {selectedPolicies.map((policy) => (
                     <td key={policy.id} className="border border-gray-200 p-3">
                       <span className="text-sm text-gray-600">
-                        Save {formatCurrency((policy.monthlyPremium * 12) - policy.yearlyPremium)} annually
+                        Save {formatToINR((policy.monthlyPremium * 12) - policy.yearlyPremium)} annually
                       </span>
                     </td>
                   ))}
@@ -387,10 +388,10 @@ const PolicyComparePage = () => {
 
       {/* Empty State */}
       {policies.length === 0 && !loading && (
-        <div className="bg-white p-12 rounded-lg shadow text-center">
+        <div className={`p-12 rounded-lg shadow text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
           <div className="text-4xl mb-4">📋</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Policies Available</h3>
-          <p className="text-gray-600 mb-4">
+          <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>No Policies Available</h3>
+          <p className={`mb-4 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
             There are no policies available to compare at the moment.
           </p>
           <Button onClick={fetchPolicies}>

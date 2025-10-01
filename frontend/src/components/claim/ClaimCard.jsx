@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../ui/Button';
+import { formatCurrency } from '../../utils/formatters';
 
 const ClaimCard = ({ claim }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -40,19 +41,18 @@ const ClaimCard = ({ claim }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
 
-  const formatCurrency = (amount) => {
-    if (!amount) return '$0';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+  // Claim amounts come from backend as USD; convert to INR for display
+  const formatClaimAmount = (amount) => {
+    if (amount === null || amount === undefined) return formatCurrency(0);
+    const inr = Number(amount) * 83; // conversion rate (approx)
+    return formatCurrency(inr, 'INR');
   };
 
   const getClaimTypeIcon = (type) => {
@@ -113,7 +113,7 @@ const ClaimCard = ({ claim }) => {
             <div>
               <p className="text-xs text-gray-500">Claim Amount</p>
               <p className="font-semibold text-gray-900">
-                {formatCurrency(claim.amount)}
+                {formatClaimAmount(claim.amount)}
               </p>
             </div>
           </div>
@@ -134,7 +134,7 @@ const ClaimCard = ({ claim }) => {
             <span className="text-2xl mr-3">📅</span>
             <div>
               <p className="text-xs text-gray-500">Submitted</p>
-              <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-gray-900">
                 {formatDate(claim.submittedDate)}
               </p>
             </div>
@@ -145,7 +145,7 @@ const ClaimCard = ({ claim }) => {
             <span className="text-2xl mr-3">🔄</span>
             <div>
               <p className="text-xs text-gray-500">Last Updated</p>
-              <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-gray-900">
                 {formatDate(claim.lastUpdated)}
               </p>
             </div>
@@ -319,7 +319,7 @@ const ClaimCard = ({ claim }) => {
                 Settlement Amount:
               </span>
               <span className="text-lg font-bold text-green-600">
-                {formatCurrency(claim.amount)}
+                {formatClaimAmount(claim.amount)}
               </span>
             </div>
             <div className="flex items-center justify-between mt-2">

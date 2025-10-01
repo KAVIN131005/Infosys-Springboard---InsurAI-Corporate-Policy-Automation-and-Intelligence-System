@@ -113,6 +113,16 @@ const PolicyUploader = ({ onUploadSuccess, onUploadError }) => {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        onClick={() => !file && fileInputRef.current?.click()}
+        role={!file ? 'button' : 'region'}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (!file && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        aria-label={!file ? 'Upload policy file, click or press Enter to choose a file' : 'Selected file'}
       >
         {!file ? (
           <>

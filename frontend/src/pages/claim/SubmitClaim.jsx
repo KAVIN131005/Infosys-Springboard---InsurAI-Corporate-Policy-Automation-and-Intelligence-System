@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import ClaimUploader from '../../components/claim/ClaimUploader';
@@ -8,6 +9,7 @@ import { getCurrentUserPolicies } from '../../api/userPolicyService';
 
 const SubmitClaim = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [step, setStep] = useState(1);
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -135,11 +137,17 @@ const SubmitClaim = () => {
 
   if (step === 5) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
+      <div className={`min-h-screen flex items-center justify-center p-6 transition-colors duration-300 ${
+        isDark ? 'bg-slate-900' : 'bg-gray-50'
+      }`}>
+        <div className={`rounded-lg shadow-lg p-8 max-w-md text-center transition-colors duration-300 ${
+          isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'
+        }`}>
           <div className="text-6xl mb-4">✅</div>
           <h2 className="text-2xl font-bold text-green-700 mb-4">Claim Submitted Successfully!</h2>
-          <p className="text-gray-600 mb-4">
+          <p className={`mb-4 ${
+            isDark ? 'text-slate-300' : 'text-gray-600'
+          }`}>
             Your claim has been submitted and is being processed. You'll receive updates via email.
           </p>
           {localStorage.getItem('lastClaimId') && (
@@ -170,12 +178,16 @@ const SubmitClaim = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className={`min-h-screen p-6 transition-colors duration-300 ${
+      isDark ? 'bg-slate-900' : 'bg-gray-50'
+    }`}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">📋 Submit New Claim</h1>
-          <p className="text-gray-600">
+          <h1 className={`text-3xl font-bold mb-2 ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>📋 Submit New Claim</h1>
+          <p className={isDark ? 'text-slate-300' : 'text-gray-600'}>
             Welcome, {user?.firstName || user?.username}! Let's get your claim submitted quickly and efficiently.
           </p>
         </div>
@@ -198,7 +210,9 @@ const SubmitClaim = () => {
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-sm text-gray-600">
+          <div className={`flex justify-between text-sm ${
+            isDark ? 'text-slate-400' : 'text-gray-600'
+          }`}>
             <span>Policy & Type</span>
             <span>Incident Details</span>
             <span>Documentation</span>
@@ -207,11 +221,15 @@ const SubmitClaim = () => {
         </div>
 
         {/* Step Content */}
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className={`rounded-lg shadow-md p-8 transition-colors duration-300 ${
+          isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'
+        }`}>
           {/* Step 1: Policy Selection and Claim Type */}
           {step === 1 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">📋 Select Policy and Claim Type</h2>
+              <h2 className={`text-2xl font-semibold mb-6 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>📋 Select Policy and Claim Type</h2>
               
               {/* Policy Selection */}
               <div>

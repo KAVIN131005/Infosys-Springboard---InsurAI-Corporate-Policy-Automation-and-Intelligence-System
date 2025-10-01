@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+// Theme removed: no ThemeContext import
+import { formatCurrency } from '../../utils/formatters';
 import { getAdminDashboard } from '../../api/dashboardService';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  // Theme removed: force light mode styles
+  // const { isDark } = useTheme();
   const [dashboardData, setDashboardData] = useState({
     totalUsers: 0,
     totalPolicies: 0,
@@ -132,17 +136,17 @@ const AdminDashboard = () => {
     }
   };
 
-  // Loading state
+  // Loading state (light-only)
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-6 bg-gray-50">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="h-8 rounded w-1/4 mb-6 bg-gray-200"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white p-6 rounded-lg shadow-md">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div key={i} className="p-6 rounded-lg shadow-md bg-white">
+                <div className="h-4 rounded w-3/4 mb-2 bg-gray-200"></div>
+                <div className="h-8 rounded w-1/2 bg-gray-200"></div>
               </div>
             ))}
           </div>
@@ -151,11 +155,11 @@ const AdminDashboard = () => {
     );
   }
 
-  // Error state
+  // Error state (light-only)
   if (error) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="p-6 bg-gray-50">
+        <div className="border rounded-lg p-4 bg-red-50 border-red-200">
           <div className="flex">
             <div className="flex-shrink-0">
               <span className="text-red-400 text-xl">⚠️</span>
@@ -168,7 +172,7 @@ const AdminDashboard = () => {
               <div className="mt-4">
                 <button
                   onClick={fetchDashboardData}
-                  className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-md text-sm font-medium"
+                  className="px-4 py-2 rounded-md text-sm font-medium bg-red-100 hover:bg-red-200 text-red-800"
                 >
                   Try Again
                 </button>
@@ -202,17 +206,16 @@ const AdminDashboard = () => {
     );
   }
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
+  const formatToINR = (amount) => {
+    // Convert backend USD quantities to INR for display (fixed rate used here)
+    const val = Number(amount) || 0;
+    return formatCurrency(val * 83, 'INR');
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen bg-gray-50">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold mb-2 text-gray-900">
           ⚙️ Admin Dashboard
         </h1>
         <p className="text-gray-600">
@@ -222,7 +225,7 @@ const AdminDashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+        <div className="p-6 rounded-lg shadow-md border-l-4 border-blue-500 bg-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Users</p>
@@ -276,7 +279,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(dashboardData.monthlyRevenue)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatToINR(dashboardData.monthlyRevenue)}</p>
             </div>
             <div className="text-3xl">💰</div>
           </div>
@@ -428,7 +431,7 @@ const AdminDashboard = () => {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">{policy.name}</p>
-                        <p className="text-xs text-gray-600">{policy.type} - {formatCurrency(policy.monthlyPremium)}/month</p>
+                        <p className="text-xs text-gray-600">{policy.type} - {formatToINR(policy.monthlyPremium)}/month</p>
                       </div>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -459,7 +462,7 @@ const AdminDashboard = () => {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">Claim #{claim.claimNumber || claim.id}</p>
-                        <p className="text-xs text-gray-600">{claim.type} - {formatCurrency(claim.claimAmount)}</p>
+                        <p className="text-xs text-gray-600">{claim.type} - {formatToINR(claim.claimAmount)}</p>
                       </div>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${

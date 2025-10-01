@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/analytics")
+@RequestMapping("/api/admin/analytics")
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:5173"})
-@PreAuthorize("hasRole('ADMIN') or hasRole('BROKER')")
-public class DynamicAnalyticsController {
+@PreAuthorize("hasRole('ADMIN')")
+public class AdminAnalyticsController {
 
     @Autowired
     private AdminDashboardService adminDashboardService;
@@ -35,52 +35,30 @@ public class DynamicAnalyticsController {
     private UserService userService;
 
     /**
-     * Get comprehensive dynamic analytics based on user role
-     * Collects data from both Admin Dashboard and Broker Dashboard
+     * Get comprehensive admin analytics
      */
     @GetMapping("/comprehensive")
     public ResponseEntity<Map<String, Object>> getComprehensiveAnalytics(Authentication auth) {
         try {
             String username = auth.getName();
             User currentUser = userService.findByUsername(username);
-            String userRole = currentUser.getRole().getName();
             
             Map<String, Object> analytics = new HashMap<>();
             
-            // Always include system-wide analytics for context
-            Map<String, Object> systemAnalytics = dashboardAnalyticsService.getAnalyticsDashboard();
-            analytics.put("systemAnalytics", systemAnalytics);
+            // Admin gets full analytics from both admin and broker perspectives
+            Map<String, Object> adminData = adminDashboardService.getAnalyticsOverview();
+            analytics.put("adminAnalytics", adminData);
             
-            if ("ADMIN".equals(userRole)) {
-                // Admin gets full analytics from both admin and broker perspectives
-                Map<String, Object> adminData = adminDashboardService.getAnalyticsOverview();
-                analytics.put("adminAnalytics", adminData);
-                
-                // Aggregate broker analytics for admin overview
-                Map<String, Object> brokerAggregated = aggregateBrokerAnalytics();
-                analytics.put("brokerAggregatedAnalytics", brokerAggregated);
-                
-                // Add admin-specific dashboard data
-                Map<String, Object> adminDashboard = dashboardAnalyticsService.getAdminDashboardData();
-                analytics.put("adminDashboard", adminDashboard);
-                
-            } else if ("BROKER".equals(userRole)) {
-                // Broker gets their specific analytics plus limited system context
-                Map<String, Object> brokerData = brokerDashboardService.getBrokerAnalytics(username);
-                analytics.put("brokerAnalytics", brokerData);
-                
-                // Add broker-specific dashboard data
-                Long brokerId = currentUser.getId();
-                Map<String, Object> brokerDashboard = dashboardAnalyticsService.getBrokerDashboardData(brokerId);
-                analytics.put("brokerDashboard", brokerDashboard);
-                
-                // Add limited system analytics for context
-                Map<String, Object> limitedSystemAnalytics = getLimitedSystemAnalytics();
-                analytics.put("systemContext", limitedSystemAnalytics);
-            }
+            // Aggregate broker analytics for admin overview
+            Map<String, Object> brokerAggregated = aggregateBrokerAnalytics();
+            analytics.put("brokerAggregatedAnalytics", brokerAggregated);
+            
+            // Add admin-specific dashboard data
+            Map<String, Object> adminDashboard = dashboardAnalyticsService.getAdminDashboardData();
+            analytics.put("adminDashboard", adminDashboard);
             
             // Add role information
-            analytics.put("userRole", userRole);
+            analytics.put("userRole", "ADMIN");
             analytics.put("username", username);
             analytics.put("timestamp", System.currentTimeMillis());
             
@@ -92,55 +70,100 @@ public class DynamicAnalyticsController {
     }
 
     /**
-     * Get role-based analytics overview
+     * Get admin analytics overview
      */
     @GetMapping("/overview")
-    public ResponseEntity<Map<String, Object>> getRoleBasedOverview(Authentication auth) {
+    public ResponseEntity<Map<String, Object>> getAdminOverview(Authentication auth) {
         try {
-            String username = auth.getName();
-            User currentUser = userService.findByUsername(username);
-            String userRole = currentUser.getRole().getName();
+            Map<String, Object> overview = adminDashboardService.getAnalyticsOverview();
+            overview.put("totalBrokers", getBrokerCount());
+            overview.put("brokerPerformance", getBrokerPerformanceMetrics());
+            overview.put("userRole", "ADMIN");
             
-            Map<String, Object> overview = new HashMap<>();
-            
-            if ("ADMIN".equals(userRole)) {
-                overview = adminDashboardService.getAnalyticsOverview();
-                overview.put("totalBrokers", getBrokerCount());
-                overview.put("brokerPerformance", getBrokerPerformanceMetrics());
-            } else if ("BROKER".equals(userRole)) {
-                overview = brokerDashboardService.getBrokerAnalytics(username);
-                overview.put("brokerStats", brokerDashboardService.getBrokerStats(username));
-            }
-            
-            overview.put("userRole", userRole);
             return ResponseEntity.ok(overview);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
     
+    // Helper methods
+    private Map<String, Object> aggregateBrokerAnalytics() {
+        Map<String, Object> aggregated = new HashMap<>();
+        
+        List<com.example.insur.dto.UserDto> brokers = userService.getAllUsers().stream()
+                .filter(user -> user.getRole() != null && "BROKER".equals(user.getRole()))
+                .collect(Collectors.toList());
+        
+        aggregated.put("totalBrokers", brokers.size());
+        
+        // Aggregate broker performance
+        Map<String, Object> brokerPerformance = new HashMap<>();
+        double totalRevenue = 0.0;
+        int totalPolicies = 0;
+        
+        for (com.example.insur.dto.UserDto broker : brokers) {
+            try {
+                Map<String, Object> brokerData = dashboardAnalyticsService.getBrokerDashboardData(broker.getId());
+                if (brokerData.get("monthlyRevenue") instanceof Number) {
+                    totalRevenue += ((Number) brokerData.get("monthlyRevenue")).doubleValue();
+                }
+                if (brokerData.get("totalPolicies") instanceof Number) {
+                    totalPolicies += ((Number) brokerData.get("totalPolicies")).intValue();
+                }
+            } catch (Exception e) {
+                // Continue with next broker if one fails
+            }
+        }
+        
+        brokerPerformance.put("totalRevenue", totalRevenue);
+        brokerPerformance.put("totalPolicies", totalPolicies);
+        brokerPerformance.put("averageRevenuePerBroker", brokers.size() > 0 ? totalRevenue / brokers.size() : 0);
+        brokerPerformance.put("averagePoliciesPerBroker", brokers.size() > 0 ? (double) totalPolicies / brokers.size() : 0);
+        
+        aggregated.put("brokerPerformance", brokerPerformance);
+        
+        return aggregated;
+    }
+
+    private long getBrokerCount() {
+        return userService.getAllUsers().stream()
+                .filter(user -> user.getRole() != null && "BROKER".equals(user.getRole()))
+                .count();
+    }
+
+    private Map<String, Object> getBrokerPerformanceMetrics() {
+        Map<String, Object> metrics = new HashMap<>();
+        
+        List<com.example.insur.dto.UserDto> brokers = userService.getAllUsers().stream()
+                .filter(user -> user.getRole() != null && "BROKER".equals(user.getRole()))
+                .collect(Collectors.toList());
+        
+        if (!brokers.isEmpty()) {
+            metrics.put("totalActiveBrokers", brokers.size());
+            metrics.put("averagePerformanceScore", 87.5); // Mock data
+            metrics.put("topPerformingBrokers", 
+                brokers.stream().limit(5).map(com.example.insur.dto.UserDto::getUsername).collect(Collectors.toList()));
+        } else {
+            metrics.put("totalActiveBrokers", 0);
+            metrics.put("averagePerformanceScore", 0.0);
+            metrics.put("topPerformingBrokers", List.of());
+        }
+        
+        return metrics;
+    }
+    
     /**
-     * Get dashboard data specific to user role
+     * Get dashboard data specific to admin role
      */
     @GetMapping("/dashboard")
-    public ResponseEntity<Map<String, Object>> getRoleBasedDashboard(Authentication auth) {
+    public ResponseEntity<Map<String, Object>> getAdminDashboard(Authentication auth) {
         try {
             String username = auth.getName();
             User currentUser = userService.findByUsername(username);
-            String userRole = currentUser.getRole().getName();
             Long userId = currentUser.getId();
             
-            Map<String, Object> dashboard;
-            
-            if ("ADMIN".equals(userRole)) {
-                dashboard = dashboardAnalyticsService.getAdminDashboardData();
-            } else if ("BROKER".equals(userRole)) {
-                dashboard = dashboardAnalyticsService.getBrokerDashboardData(userId);
-            } else {
-                dashboard = dashboardAnalyticsService.getUserDashboardData(userId);
-            }
-            
-            dashboard.put("userRole", userRole);
+            Map<String, Object> dashboard = dashboardAnalyticsService.getAdminDashboardData();
+            dashboard.put("userRole", "ADMIN");
             dashboard.put("userId", userId);
             
             return ResponseEntity.ok(dashboard);
@@ -198,73 +221,6 @@ public class DynamicAnalyticsController {
         try {
             Map<String, Object> performance = adminDashboardService.getPerformanceMetrics();
             return ResponseEntity.ok(performance);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    /**
-     * Get real-time dashboard updates
-     */
-    @GetMapping("/realtime")
-    public ResponseEntity<Map<String, Object>> getRealTimeUpdates() {
-        try {
-            // This would typically use WebSocket or Server-Sent Events
-            // For now, return current analytics data
-            Map<String, Object> updates = adminDashboardService.getAnalyticsOverview();
-            return ResponseEntity.ok(updates);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    /**
-     * Export analytics data
-     */
-    @PostMapping("/export")
-    public ResponseEntity<String> exportAnalytics(@RequestBody Map<String, Object> exportRequest) {
-        try {
-            // Implementation would depend on export format (PDF, Excel, CSV)
-            String format = (String) exportRequest.get("format");
-            // For now, return success message
-            return ResponseEntity.ok("Analytics exported successfully in " + format + " format");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Export failed");
-        }
-    }
-
-    /**
-     * Save dashboard configuration
-     */
-    @PostMapping("/config")
-    public ResponseEntity<Map<String, Object>> saveDashboardConfig(
-            @RequestBody Map<String, Object> config) {
-        try {
-            // Save configuration (would typically save to database)
-            return ResponseEntity.ok(Map.of("success", true, "message", "Configuration saved"));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    /**
-     * Load dashboard configuration
-     */
-    @GetMapping("/config")
-    public ResponseEntity<Map<String, Object>> loadDashboardConfig() {
-        try {
-            // Load configuration (would typically load from database)
-            Map<String, Object> defaultConfig = Map.of(
-                "theme", "light",
-                "refreshInterval", 300000,
-                "defaultTab", "overview",
-                "chartPreferences", Map.of(
-                    "showLegend", true,
-                    "showTooltips", true,
-                    "animationDuration", 500
-                )
-            );
-            return ResponseEntity.ok(defaultConfig);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

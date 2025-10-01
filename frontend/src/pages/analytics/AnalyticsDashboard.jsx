@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 import axios from 'axios';
 import Spinner from '../../components/ui/Spinner';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from 'recharts';
 
 const AnalyticsDashboard = () => {
+  const { isDark } = useTheme();
   const [analyticsData, setAnalyticsData] = useState(null);
   const [chartData, setChartData] = useState(null);
   const [userRole, setUserRole] = useState(null);

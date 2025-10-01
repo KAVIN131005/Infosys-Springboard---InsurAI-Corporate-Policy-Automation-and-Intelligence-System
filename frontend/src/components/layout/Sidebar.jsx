@@ -18,7 +18,7 @@ const Sidebar = () => {
         { path: '/admin/policies', label: 'Manage Policies', icon: '📋' },
         { path: '/admin/approvals', label: 'Policy Approvals', icon: '✅' },
         { path: '/admin/claim-approvals', label: 'Claim Approvals', icon: '🔍' },
-        { path: '/admin/upload-policy', label: 'Upload Policy', icon: '📤' },
+        // Admin upload removed; upload is broker-only to be performed after broker login
         { path: '/analytics', label: 'Analytics', icon: '📈' },
         { path: '/chatbot', label: 'AI Assistant', icon: '🤖' },
       ];

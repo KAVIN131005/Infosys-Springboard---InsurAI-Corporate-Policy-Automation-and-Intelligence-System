@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { register } from '../../api/authService';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
@@ -27,6 +28,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
 
   const { checkAuthStatus } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -138,23 +140,39 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-all duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
+        : 'bg-gradient-to-br from-green-50 via-white to-blue-50'
+    }`}>
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
+          <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors ${
+            isDark ? 'bg-green-600' : 'bg-green-600'
+          }`}>
             <span className="text-white text-2xl">✨</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Join InsurAI</h1>
-          <p className="text-gray-600">Create your account and get started</p>
+          <h1 className={`text-3xl font-bold mb-2 ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>Join InsurAI</h1>
+          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+            Create your account and get started
+          </p>
         </div>
 
         {/* Registration Form */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className={`rounded-xl shadow-lg p-8 transition-all duration-300 ${
+          isDark 
+            ? 'bg-slate-800/50 border border-slate-700' 
+            : 'bg-white border border-gray-100'
+        }`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Role Selection */}
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="role" className={`block text-sm font-medium mb-2 ${
+                isDark ? 'text-slate-300' : 'text-gray-700'
+              }`}>
                 Account Type
               </label>
               <select
@@ -162,7 +180,11 @@ const Register = () => {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  isDark
+                    ? 'bg-slate-700 border-slate-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
+                }`}
                 disabled={isLoading}
               >
                 <option value="USER">Customer</option>
@@ -496,12 +518,16 @@ const Register = () => {
           </form>
 
           {/* Login Link */}
-          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-            <p className="text-gray-600">
+          <div className={`mt-8 pt-6 border-t text-center ${
+            isDark ? 'border-slate-600' : 'border-gray-200'
+          }`}>
+            <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>
               Already have an account?{' '}
               <Link 
                 to="/login" 
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className={`font-medium hover:underline ${
+                  isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'
+                }`}
               >
                 Sign in here
               </Link>

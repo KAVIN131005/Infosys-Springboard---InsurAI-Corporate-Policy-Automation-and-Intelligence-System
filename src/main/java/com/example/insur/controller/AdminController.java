@@ -60,11 +60,6 @@ public class AdminController {
         return ResponseEntity.ok(adminDashboardService.getSystemHealth());
     }
 
-    @GetMapping("/analytics/overview")
-    public ResponseEntity<Map<String, Object>> getAnalyticsOverview() {
-        return ResponseEntity.ok(adminDashboardService.getAnalyticsOverview());
-    }
-
     // User management endpoints
     @GetMapping("/users")
     public ResponseEntity<List<UserDto>> getAllUsers() {

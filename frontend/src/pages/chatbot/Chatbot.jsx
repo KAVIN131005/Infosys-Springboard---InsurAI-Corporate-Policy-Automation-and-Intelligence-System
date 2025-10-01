@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { chatService, aiHealthService } from '../../api/aiService';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { 
   Send, 
   MessageCircle, 
@@ -30,6 +31,7 @@ const Chatbot = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const { user } = useAuth();
+  const { isDark } = useTheme();
 
   useEffect(() => {
     checkAIServiceHealth();
@@ -258,23 +260,33 @@ What can I help you with today?`,
         <div className={`flex-1 max-w-xs sm:max-w-md lg:max-w-lg ${isBot ? '' : 'flex flex-col items-end'}`}>
           <div className={`px-4 py-3 rounded-2xl shadow-sm ${
             isBot 
-              ? 'bg-white border border-gray-200 text-gray-800' 
+              ? isDark
+                ? 'bg-slate-700 border border-slate-600 text-white'
+                : 'bg-white border border-gray-200 text-gray-800' 
               : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-          } ${message.isError ? 'border-red-300 bg-red-50 text-red-800' : ''}`}>
+          } ${message.isError ? isDark ? 'border-red-500/50 bg-red-900/30 text-red-300' : 'border-red-300 bg-red-50 text-red-800' : ''}`}>
             <div className="whitespace-pre-wrap text-sm leading-relaxed">
               {message.text}
             </div>
             
             {/* Suggestions */}
             {message.suggestions && message.suggestions.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <p className="text-xs text-gray-500 mb-2">Quick suggestions:</p>
+              <div className={`mt-3 pt-3 border-t ${
+                isDark ? 'border-slate-600' : 'border-gray-100'
+              }`}>
+                <p className={`text-xs mb-2 ${
+                  isDark ? 'text-slate-400' : 'text-gray-500'
+                }`}>Quick suggestions:</p>
                 <div className="flex flex-wrap gap-1">
                   {message.suggestions.map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 border border-gray-200 hover:border-gray-300"
+                      className={`px-2 py-1 text-xs rounded-lg transition-colors duration-200 ${
+                        isDark
+                          ? 'bg-slate-600 hover:bg-slate-500 text-slate-200 border border-slate-500'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 hover:border-gray-300'
+                      }`}
                     >
                       {suggestion}
                     </button>
@@ -336,16 +348,26 @@ What can I help you with today?`,
   );
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-white">
+    <div className={`flex flex-col h-full transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-slate-900 to-slate-800' 
+        : 'bg-gradient-to-br from-gray-50 to-white'
+    }`}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+      <div className={`px-6 py-4 shadow-sm transition-colors duration-300 ${
+        isDark
+          ? 'bg-slate-800 border-b border-slate-700'
+          : 'bg-white border-b border-gray-200'
+      }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
               <Bot className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-800">InsurAI Assistant</h2>
+              <h2 className={`text-xl font-semibold ${
+                isDark ? 'text-white' : 'text-gray-800'
+              }`}>InsurAI Assistant</h2>
               <ConnectionIndicator />
             </div>
           </div>
@@ -353,14 +375,22 @@ What can I help you with today?`,
           <div className="flex items-center gap-2">
             <button
               onClick={checkAIServiceHealth}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                isDark 
+                  ? 'text-slate-300 hover:text-white hover:bg-slate-700' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              }`}
               title="Refresh connection"
             >
               <RefreshCw className="w-5 h-5" />
             </button>
             <button
               onClick={handleClearChat}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                isDark 
+                  ? 'text-slate-300 hover:text-white hover:bg-slate-700' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              }`}
               title="Clear chat"
             >
               <Trash2 className="w-5 h-5" />
@@ -373,10 +403,12 @@ What can I help you with today?`,
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {!isConnected && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Bot className="w-8 h-8 text-gray-400" />
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+              isDark ? 'bg-slate-700' : 'bg-gray-100'
+            }`}>
+              <Bot className={`w-8 h-8 ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
             </div>
-            <p className="text-gray-500 mb-2">Connecting to InsurAI...</p>
+            <p className={`mb-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Connecting to InsurAI...</p>
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
         )}
@@ -404,7 +436,11 @@ What can I help you with today?`,
       </div>
 
       {/* Input Area */}
-      <div className="bg-white border-t border-gray-200 px-6 py-4">
+      <div className={`px-6 py-4 transition-colors duration-300 ${
+        isDark
+          ? 'bg-slate-800 border-t border-slate-700'
+          : 'bg-white border-t border-gray-200'
+      }`}>
         <div className="flex gap-3 items-end">
           <div className="flex-1">
             <textarea
@@ -415,7 +451,11 @@ What can I help you with today?`,
               placeholder={isConnected ? "Ask me anything about insurance..." : "Connecting to service..."}
               disabled={isLoading || !isConnected}
               rows={1}
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+              className={`w-full px-4 py-3 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isDark 
+                  ? 'bg-slate-700 border border-slate-600 text-white placeholder-slate-400 disabled:bg-slate-800 disabled:text-slate-500' 
+                  : 'border border-gray-300 disabled:bg-gray-100 disabled:text-gray-400'
+              }`}
               style={{ minHeight: '48px', maxHeight: '120px' }}
             />
           </div>
@@ -428,7 +468,9 @@ What can I help you with today?`,
           </button>
         </div>
         
-        <div className="mt-2 text-xs text-gray-500 text-center">
+        <div className={`mt-2 text-xs text-center ${
+          isDark ? 'text-slate-400' : 'text-gray-500'
+        }`}>
           Press Enter to send • Shift+Enter for new line
         </div>
       </div>

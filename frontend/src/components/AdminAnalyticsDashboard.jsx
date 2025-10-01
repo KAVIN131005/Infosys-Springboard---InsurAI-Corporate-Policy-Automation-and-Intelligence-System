@@ -6,6 +6,7 @@ import {
 import { fetchAdminAnalytics } from '../services/analyticsService';
 import { debugAuthState, testApiCall } from '../utils/authDebug';
 import { useAuth } from '../context/AuthContext';
+import { formatCurrency } from '../utils/formatters';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658'];
 
@@ -68,7 +69,7 @@ const AdminAnalyticsDashboard = () => {
   const renderOverviewTab = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* System Metrics Cards */}
-      <div className="col-span-full grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div className="col-span-full grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
           <h3 className="text-blue-700 font-semibold">Total Policies</h3>
           <p className="text-2xl font-bold text-blue-800">{analyticsData?.totalPolicies || 0}</p>
@@ -79,7 +80,7 @@ const AdminAnalyticsDashboard = () => {
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
           <h3 className="text-yellow-700 font-semibold">Total Revenue</h3>
-          <p className="text-2xl font-bold text-yellow-800">${analyticsData?.totalRevenue || 0}</p>
+          <p className="text-2xl font-bold text-yellow-800">{formatCurrency((analyticsData?.totalRevenue || 0) * 83)}</p>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
           <h3 className="text-purple-700 font-semibold">Active Brokers</h3>
@@ -88,7 +89,7 @@ const AdminAnalyticsDashboard = () => {
       </div>
 
       {/* Policy Distribution Pie Chart */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="p-6 rounded-lg shadow bg-white">
         <h3 className="text-lg font-semibold mb-4">Policy Distribution by Type</h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -112,7 +113,7 @@ const AdminAnalyticsDashboard = () => {
       </div>
 
       {/* Claims Status Distribution */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="p-6 rounded-lg shadow bg-white">
         <h3 className="text-lg font-semibold mb-4">Claims Status Distribution</h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -140,14 +141,14 @@ const AdminAnalyticsDashboard = () => {
   const renderTrendsTab = () => (
     <div className="space-y-6">
       {/* Monthly Trends */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="p-6 rounded-lg shadow bg-white">
         <h3 className="text-lg font-semibold mb-4">Monthly Trends</h3>
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={analyticsData?.monthlyTrends || []}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip />
+            <Tooltip formatter={(value, name) => name === 'revenue' ? [formatCurrency((value || 0) * 83), name] : [value, name]} />
             <Legend />
             <Line type="monotone" dataKey="policies" stroke="#8884d8" strokeWidth={2} />
             <Line type="monotone" dataKey="claims" stroke="#82ca9d" strokeWidth={2} />
@@ -157,14 +158,14 @@ const AdminAnalyticsDashboard = () => {
       </div>
 
       {/* Revenue Analytics */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="p-6 rounded-lg shadow bg-white">
         <h3 className="text-lg font-semibold mb-4">Revenue Analytics</h3>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={analyticsData?.revenueAnalytics || []}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="period" />
             <YAxis />
-            <Tooltip formatter={(value) => [`$${value}`, 'Revenue']} />
+            <Tooltip formatter={(value, name) => name === 'revenue' ? [formatCurrency((value || 0) * 83), 'Revenue'] : [value, name]} />
             <Area type="monotone" dataKey="revenue" stroke="#8884d8" fill="#8884d8" />
           </AreaChart>
         </ResponsiveContainer>
@@ -175,7 +176,7 @@ const AdminAnalyticsDashboard = () => {
   const renderAITab = () => (
     <div className="space-y-6">
       {/* AI Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
           <h3 className="text-indigo-700 font-semibold">AI Accuracy</h3>
           <p className="text-2xl font-bold text-indigo-800">
@@ -195,7 +196,7 @@ const AdminAnalyticsDashboard = () => {
       </div>
 
       {/* AI Performance Chart */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="p-6 rounded-lg shadow bg-white">
         <h3 className="text-lg font-semibold mb-4">AI vs Manual Claims Processing</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={analyticsData?.aiPerformanceChart || []}>
@@ -243,7 +244,7 @@ const AdminAnalyticsDashboard = () => {
       </div>
 
       {/* Performance Trends */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="p-6 rounded-lg shadow bg-white">
         <h3 className="text-lg font-semibold mb-4">System Performance Trends</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={analyticsData?.performanceTrends || []}>
@@ -264,12 +265,12 @@ const AdminAnalyticsDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Analytics Dashboard</h1>
-        <p className="text-gray-600">Comprehensive system analytics and performance metrics</p>
+        <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-slate-200' : 'text-gray-800'}`}>Admin Analytics Dashboard</h1>
+        <p className={`text-gray-600 ${isDark ? 'text-slate-400' : ''}`}>Comprehensive system analytics and performance metrics</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className={`border-b mb-6 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'overview', label: 'Overview', icon: '📊' },
@@ -283,7 +284,7 @@ const AdminAnalyticsDashboard = () => {
               className={`${
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : `border-transparent ${isDark ? 'text-slate-400 hover:text-slate-200 hover:border-slate-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'}`
               } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
             >
               <span>{tab.icon}</span>

@@ -4,12 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { getAdminDashboard, processRevenueChartData, processPolicyDistributionData, processClaimStatusData } from '../../api/dashboardService';
 import { websocketService } from '../../api/websocketService';
 import apiClient from '../../api/apiClient';
+import { formatCurrency } from '../../utils/formatters';
 
 const AdminDashboard = () => {
   console.log('AdminDashboard component rendering...');
-  
-  try {
-    const { user } = useAuth();
+  const { user } = useAuth();
     console.log('Admin user data:', user);
     
     const [dashboardData, setDashboardData] = useState({
@@ -133,14 +132,14 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-6 transition-colors duration-300 bg-gray-50">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="h-8 rounded w-1/4 mb-6 bg-gray-200"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white p-6 rounded-lg shadow-md">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div key={i} className="p-6 rounded-lg shadow-md bg-white">
+                <div className="h-4 rounded w-3/4 mb-2 bg-gray-200"></div>
+                <div className="h-8 rounded w-1/2 bg-gray-200"></div>
               </div>
             ))}
           </div>
@@ -151,21 +150,21 @@ const AdminDashboard = () => {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="p-6 transition-colors duration-300 bg-gray-50">
+        <div className="border rounded-lg p-4 bg-red-50 border-red-200">
           <div className="flex">
             <div className="flex-shrink-0">
               <span className="text-red-400 text-xl">⚠️</span>
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error Loading Dashboard</h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>{error}</p>
+              <div className="mt-2 text-sm">
+                <p className="text-red-700">{error}</p>
               </div>
               <div className="mt-4">
                 <button
                   onClick={fetchDashboardData}
-                  className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-md text-sm font-medium"
+                  className="px-4 py-2 rounded-md text-sm font-medium transition-colors bg-red-100 hover:bg-red-200 text-red-800"
                 >
                   Try Again
                 </button>
@@ -177,22 +176,15 @@ const AdminDashboard = () => {
     );
   }
 
-  const formatCurrency = (amount) => {
-    // Convert USD to INR and format
-    const inrAmount = (amount || 0) * 83;
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
-    }).format(inrAmount);
-  };
+  // Use shared formatCurrency util which defaults to INR
 
   // Error boundary
   if (error) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">Error Loading Admin Dashboard</h2>
-          <p className="text-red-700 mb-4">{error}</p>
+      <div className="p-6 transition-colors duration-300 bg-gray-50">
+        <div className="border rounded-lg p-4 bg-red-50 border-red-200">
+          <h2 className="text-lg font-semibold mb-2 text-red-800">Error Loading Admin Dashboard</h2>
+          <p className="mb-4 text-red-700">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
@@ -205,14 +197,10 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen transition-colors duration-300 bg-gray-50">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          ⚙️ Admin Dashboard
-        </h1>
-        <p className="text-gray-600">
-          Welcome back, {user?.firstName || user?.username}! Here's your system overview.
-        </p>
+        <h1 className="text-3xl font-bold mb-2 text-gray-900">⚙️ Admin Dashboard</h1>
+        <p className="text-gray-600">Welcome back, {user?.firstName || user?.username}! Here's your system overview.</p>
       </div>
 
       {/* Urgent Actions & Approval Queue */}
@@ -226,14 +214,14 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="text-right">
-              <div className="text-4xl font-bold">{dashboardData.pendingPolicies || 0}</div>
+              <div className="text-2xl font-bold">{dashboardData.pendingPolicies || 0}</div>
               <div className="text-sm opacity-90">Pending</div>
             </div>
           </div>
           <div className="mt-4 flex space-x-3">
             <Link
               to="/admin/approvals"
-              className="bg-white text-red-600 px-6 py-3 rounded-lg font-medium hover:bg-red-50 transition-colors flex items-center space-x-2"
+              className="px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 bg-white text-red-600 hover:bg-red-50"
             >
               <span>🔍</span>
               <span>Review Applications Now</span>
@@ -251,7 +239,7 @@ const AdminDashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+  <div className={`p-6 rounded-lg shadow-md border-l-4 border-blue-500 bg-white`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Users</p>
@@ -261,7 +249,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+  <div className={`p-6 rounded-lg shadow-md border-l-4 border-green-500 bg-white`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Policies</p>
@@ -271,7 +259,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
+  <div className={`p-6 rounded-lg shadow-md border-l-4 border-yellow-500 bg-white`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Policies</p>
@@ -281,7 +269,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500">
+  <div className={`p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-white`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Claims</p>
@@ -291,7 +279,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+  <div className={`p-6 rounded-lg shadow-md border-l-4 border-purple-500 bg-white`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Claims</p>
@@ -301,11 +289,11 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-indigo-500">
+  <div className={`p-6 rounded-lg shadow-md border-l-4 border-indigo-500 bg-white`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(dashboardData.monthlyRevenue)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency((dashboardData.monthlyRevenue || 0) * 83)}</p>
             </div>
             <div className="text-3xl">💰</div>
           </div>
@@ -313,21 +301,21 @@ const AdminDashboard = () => {
       </div>
 
       {/* Additional Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">📊 Policy Distribution</h3>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className={`p-6 rounded-lg shadow-md bg-white`}>
+          <h3 className="text-lg font-semibold mb-3 text-gray-900">📊 Policy Distribution</h3>
           <div className="space-y-2">
             {Object.entries(dashboardData.policyTypeDistribution || {}).map(([type, count]) => (
               <div key={type} className="flex justify-between">
                 <span className="text-sm text-gray-600">{type}:</span>
-                <span className="text-sm font-semibold">{count}</span>
+                <span className="text-sm font-semibold text-gray-900">{count}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">⚖️ Risk Distribution</h3>
+        <div className={`p-6 rounded-lg shadow-md bg-white`}>
+          <h3 className="text-lg font-semibold mb-3 text-gray-900">⚖️ Risk Distribution</h3>
           <div className="space-y-2">
             {Object.entries(dashboardData.riskDistribution || {}).map(([risk, count]) => (
               <div key={risk} className="flex justify-between">
@@ -341,8 +329,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">📈 Growth Trends</h3>
+        <div className={`p-6 rounded-lg shadow-md bg-white`}>
+          <h3 className="text-lg font-semibold mb-3 text-gray-900">📈 Growth Trends</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">New Policies (6m):</span>
@@ -355,8 +343,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">🎯 Claim Analytics</h3>
+        <div className={`p-6 rounded-lg shadow-md bg-white`}>
+          <h3 className="text-lg font-semibold mb-3 text-gray-900">🎯 Claim Analytics</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Approval Rate:</span>
@@ -364,7 +352,7 @@ const AdminDashboard = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Avg Amount:</span>
-              <span className="text-sm font-semibold">{formatCurrency(dashboardData.claimAnalytics?.averageClaimAmount || 0)}</span>
+              <span className="text-sm font-semibold text-gray-900">{formatCurrency((dashboardData.claimAnalytics?.averageClaimAmount || 0) * 83)}</span>
             </div>
           </div>
         </div>
@@ -372,12 +360,12 @@ const AdminDashboard = () => {
 
       {/* Quick Actions & Management */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">🚀 Quick Actions</h2>
+        <div className="p-6 rounded-lg shadow-md bg-white">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">🚀 Quick Actions</h2>
           <div className="space-y-3">
             <Link
               to="/admin/dashboard"
-              className="block w-full p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+              className="block w-full p-3 text-left rounded-lg transition-colors bg-blue-50 hover:bg-blue-100"
             >
               <div className="flex items-center">
                 <span className="text-2xl mr-3">📊</span>
@@ -390,7 +378,7 @@ const AdminDashboard = () => {
 
             <Link
               to="/admin/policies"
-              className="block w-full p-3 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+              className="block w-full p-3 text-left rounded-lg transition-colors bg-green-50 hover:bg-green-100"
             >
               <div className="flex items-center">
                 <span className="text-2xl mr-3">📋</span>
@@ -403,7 +391,7 @@ const AdminDashboard = () => {
 
             <Link
               to="/admin/approvals"
-              className="block w-full p-3 text-left bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors"
+              className="block w-full p-3 text-left rounded-lg transition-colors bg-yellow-50 hover:bg-yellow-100"
             >
               <div className="flex items-center">
                 <span className="text-2xl mr-3">✅</span>
@@ -416,7 +404,7 @@ const AdminDashboard = () => {
 
             <Link
               to="/analytics"
-              className="block w-full p-3 text-left bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors"
+              className="block w-full p-3 text-left rounded-lg transition-colors bg-pink-50 hover:bg-pink-100"
             >
               <div className="flex items-center">
                 <span className="text-2xl mr-3">📈</span>
@@ -429,8 +417,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">📈 System Health & Real-time Status</h2>
+        <div className="p-6 rounded-lg shadow-md bg-white">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">📈 System Health & Real-time Status</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Database Status</span>
@@ -482,16 +470,16 @@ const AdminDashboard = () => {
       {/* Recent Activity & Data Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Recent Users */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">📋 Recent Activity</h2>
-            <span className="text-sm text-gray-500">Last updated: {new Date().toLocaleTimeString()}</span>
+            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>📋 Recent Activity</h2>
+            <span className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Last updated: {new Date().toLocaleTimeString()}</span>
           </div>
           <div className="space-y-3">
             {dashboardData.recentPolicies?.length > 0 || dashboardData.recentClaims?.length > 0 ? (
               <>
                 {dashboardData.recentPolicies?.slice(0, 3).map((policy) => (
-                  <div key={`policy-${policy.id}`} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div key={`policy-${policy.id}`} className="flex items-center justify-between p-3 rounded-lg transition-colors duration-300 bg-blue-50">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                         <span className="text-blue-600 text-sm">�</span>
@@ -511,9 +499,9 @@ const AdminDashboard = () => {
                   </div>
                 ))}
                 {dashboardData.recentClaims?.slice(0, 2).map((claim) => (
-                  <div key={`claim-${claim.id}`} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                  <div key={`claim-${claim.id}`} className="flex items-center justify-between p-3 rounded-lg bg-orange-50">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-orange-100">
                         <span className="text-orange-600 text-sm">📝</span>
                       </div>
                       <div>
@@ -533,25 +521,23 @@ const AdminDashboard = () => {
                 ))}
               </>
             ) : (
-              <p className="text-gray-500 text-center py-4">No recent activity</p>
+              <p className="text-center py-4 text-gray-500">No recent activity</p>
             )}
           </div>
         </div>
 
         {/* Recent Policies */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="p-6 rounded-lg shadow-md bg-white">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">📋 Recent Policies</h2>
-            <Link to="/admin/policies" className="text-blue-600 hover:text-blue-800 text-sm">
-              View All
-            </Link>
+            <Link to="/admin/policies" className="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-300">View All</Link>
           </div>
           <div className="space-y-3">
             {dashboardData.recentPolicies.length > 0 ? (
               dashboardData.recentPolicies.slice(0, 5).map((policy) => (
-                <div key={policy.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={policy.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                   <div className="flex items-center">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100">
                       <span className="text-green-600 text-sm">📋</span>
                     </div>
                     <div>
@@ -569,7 +555,7 @@ const AdminDashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-4">No recent policies</p>
+              <p className="text-center py-4 text-gray-500">No recent policies</p>
             )}
           </div>
         </div>
@@ -579,8 +565,8 @@ const AdminDashboard = () => {
 
       {/* Notifications */}
       {dashboardData.notifications.length > 0 && (
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">🔔 System Notifications</h2>
+        <div className="p-6 rounded-lg shadow-md bg-white">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">🔔 System Notifications</h2>
           <div className="space-y-3">
             {dashboardData.notifications.map((notification, index) => (
               <div key={index} className={`p-3 rounded-lg border-l-4 ${
@@ -593,9 +579,7 @@ const AdminDashboard = () => {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">{notification.title}</p>
                     <p className="text-sm text-gray-600">{notification.message}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(notification.createdAt).toLocaleString()}
-                    </p>
+                    <p className="text-xs mt-1 text-gray-500">{new Date(notification.createdAt).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -605,23 +589,6 @@ const AdminDashboard = () => {
       )}
     </div>
   );
-  } catch (error) {
-    console.error('AdminDashboard component error:', error);
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">Admin Dashboard Error</h2>
-          <p className="text-red-700 mb-4">Failed to render admin dashboard: {error.message}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
 };
 
 export default AdminDashboard;
