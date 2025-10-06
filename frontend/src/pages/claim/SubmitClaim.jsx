@@ -6,6 +6,7 @@ import Input from '../../components/ui/Input';
 import ClaimUploader from '../../components/claim/ClaimUploader';
 import { submitClaim } from '../../api/claimService';
 import { getCurrentUserPolicies } from '../../api/userPolicyService';
+import { formatCurrency } from '../../utils/formatters';
 
 const SubmitClaim = () => {
   const { user } = useAuth();
@@ -28,6 +29,9 @@ const SubmitClaim = () => {
     emergencyServices: false,
     documents: []
   });
+
+  // Format currency amounts to INR
+  const formatToINR = (amount) => formatCurrency(Number(amount) * 83, 'INR');
 
   const claimTypes = [
     { value: 'auto', label: '🚗 Auto Accident', description: 'Vehicle damage or collision' },
@@ -347,12 +351,16 @@ const SubmitClaim = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Estimated Amount (Optional)
                 </label>
-                <Input
-                  type="number"
-                  placeholder="Enter estimated claim amount"
-                  value={claimData.estimatedAmount}
-                  onChange={(e) => handleInputChange('estimatedAmount', e.target.value)}
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-500">₹</span>
+                  <Input
+                    type="number"
+                    placeholder="Enter estimated claim amount"
+                    value={claimData.estimatedAmount}
+                    onChange={(e) => handleInputChange('estimatedAmount', e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
               </div>
 
               <div>
@@ -466,7 +474,7 @@ const SubmitClaim = () => {
                   <p><strong>Date:</strong> {claimData.incidentDate} {claimData.incidentTime}</p>
                   <p><strong>Location:</strong> {claimData.location}</p>
                   <p><strong>Description:</strong> {claimData.description}</p>
-                  {claimData.estimatedAmount && <p><strong>Estimated Amount:</strong> ${claimData.estimatedAmount}</p>}
+                  {claimData.estimatedAmount && <p><strong>Estimated Amount:</strong> {formatToINR(claimData.estimatedAmount)}</p>}
                 </div>
                 
                 <div className="bg-gray-50 p-4 rounded-lg">

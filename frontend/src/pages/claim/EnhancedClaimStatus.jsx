@@ -5,6 +5,7 @@ import apiClient from '../../api/apiClient';
 import Spinner from '../../components/ui/Spinner';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { formatCurrency } from '../../utils/formatters';
 
 const EnhancedClaimStatus = () => {
   const { user } = useAuth();
@@ -15,6 +16,9 @@ const EnhancedClaimStatus = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+
+  // Format currency amounts to INR
+  const formatToINR = (amount) => formatCurrency(Number(amount) * 83, 'INR');
 
   useEffect(() => {
     fetchUserClaims();
@@ -237,7 +241,7 @@ const EnhancedClaimStatus = () => {
           
           <div className={`rounded-2xl shadow-lg p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
             <div className="text-4xl mb-2">💰</div>
-            <div className="text-3xl font-bold text-green-600">${stats.totalApprovedAmount.toLocaleString()}</div>
+            <div className="text-3xl font-bold text-green-600">{formatToINR(stats.totalApprovedAmount)}</div>
             <div className={isDark ? 'text-slate-300' : 'text-gray-600'}>Total Paid</div>
           </div>
         </div>
@@ -328,13 +332,13 @@ const EnhancedClaimStatus = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
                     <div>
                       <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Claim Amount</div>
-                      <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>${claim.claimAmount.toLocaleString()}</div>
+                      <div className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatToINR(claim.claimAmount)}</div>
                     </div>
                     
                     {claim.approvedAmount && (
                       <div>
                         <div className="text-sm text-gray-500">Approved Amount</div>
-                        <div className="text-lg font-semibold text-green-600">${claim.approvedAmount.toLocaleString()}</div>
+                        <div className="text-lg font-semibold text-green-600">{formatToINR(claim.approvedAmount)}</div>
                       </div>
                     )}
                     
@@ -457,12 +461,12 @@ const EnhancedClaimStatus = () => {
                     <div className="space-y-3">
                       <div>
                         <span className="text-sm text-gray-500">Claimed Amount:</span>
-                        <span className="ml-2 font-medium text-lg">${selectedClaim.claimAmount.toLocaleString()}</span>
+                        <span className="ml-2 font-medium text-lg">{formatToINR(selectedClaim.claimAmount)}</span>
                       </div>
                       {selectedClaim.approvedAmount && (
                         <div>
                           <span className="text-sm text-gray-500">Approved Amount:</span>
-                          <span className="ml-2 font-medium text-lg text-green-600">${selectedClaim.approvedAmount.toLocaleString()}</span>
+                          <span className="ml-2 font-medium text-lg text-green-600">{formatToINR(selectedClaim.approvedAmount)}</span>
                         </div>
                       )}
                       {selectedClaim.autoApproved && (

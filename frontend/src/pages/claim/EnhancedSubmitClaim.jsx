@@ -5,6 +5,7 @@ import apiClient from '../../api/apiClient';
 import Spinner from '../../components/ui/Spinner';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { formatCurrency } from '../../utils/formatters';
 
 const EnhancedSubmitClaim = () => {
   const { user } = useAuth();
@@ -25,6 +26,9 @@ const EnhancedSubmitClaim = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [claimResult, setClaimResult] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Format currency amounts to INR
+  const formatToINR = (amount) => formatCurrency(Number(amount) * 83, 'INR');
 
   const claimTypes = [
     { value: 'AUTO', label: '🚗 Auto Insurance', icon: '🚗', desc: 'Vehicle accidents, damages, theft' },
@@ -176,7 +180,7 @@ const EnhancedSubmitClaim = () => {
               }`}>
                 <h2 className={`text-xl font-semibold mb-3 ${isDark ? 'text-green-400' : 'text-green-800'}`}>💰 Payment Processing</h2>
                 <p className={`mb-2 ${isDark ? 'text-green-400' : 'text-green-700'}`}>
-                  <strong>Approved Amount:</strong> ${claimResult.approvedAmount?.toLocaleString()}
+                  <strong>Approved Amount:</strong> {formatToINR(claimResult.approvedAmount)}
                 </p>
                 <p className={`mb-2 ${isDark ? 'text-green-400' : 'text-green-700'}`}>
                   <strong>Payment Status:</strong> Processing to your account
@@ -403,7 +407,7 @@ const EnhancedSubmitClaim = () => {
                     💰 Claim Amount *
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-3 text-gray-500">$</span>
+                    <span className="absolute left-3 top-3 text-gray-500">₹</span>
                     <Input
                       type="number"
                       placeholder="0.00"

@@ -107,7 +107,7 @@ public class UserPolicyService {
 
                 // Create first payment record
                 paymentService.createPremiumPayment(userPolicy);
-                
+            
                 // Save before notifications
                 userPolicy = userPolicyRepository.save(userPolicy);
                 

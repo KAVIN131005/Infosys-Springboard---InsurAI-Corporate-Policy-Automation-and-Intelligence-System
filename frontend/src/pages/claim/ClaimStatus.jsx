@@ -5,6 +5,7 @@ import ClaimCard from '../../components/claim/ClaimCard';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
+import { formatCurrency } from '../../utils/formatters';
 
 const ClaimStatus = () => {
   const { user } = useAuth();
@@ -14,6 +15,9 @@ const ClaimStatus = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+
+  // Format currency amounts to INR
+  const formatToINR = (amount) => formatCurrency(Number(amount) * 83, 'INR');
 
   useEffect(() => {
     loadClaims();
@@ -196,7 +200,7 @@ const ClaimStatus = () => {
           </div>
           <div className={`rounded-lg shadow p-6 text-center transition-colors duration-300 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'}` }>
             <div className="text-3xl mb-2">💰</div>
-            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>${stats.totalAmount.toLocaleString()}</div>
+            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatToINR(stats.totalAmount)}</div>
             <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Total Amount</div>
           </div>
         </div>
