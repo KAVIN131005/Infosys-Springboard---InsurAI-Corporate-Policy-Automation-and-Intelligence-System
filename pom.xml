@@ -15,10 +15,17 @@
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<name>KAVIN K</name>
+			<id>KAVIN131005</id>
+		</developer>
 	</developers>
 	<scm>
 		<connection/>
