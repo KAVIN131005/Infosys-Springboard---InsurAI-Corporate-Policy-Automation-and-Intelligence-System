@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getAvailablePolicies } from '../../api/policyService';
 import { getCurrentUserPolicies } from '../../api/userPolicyService';
 import Spinner from '../../components/ui/Spinner';
@@ -8,6 +9,7 @@ import Button from '../../components/ui/Button';
 
 const UserPolicies = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [availablePolicies, setAvailablePolicies] = useState([]);
   const [userPolicies, setUserPolicies] = useState([]);
   const [loading, setLoading] = useState(true);

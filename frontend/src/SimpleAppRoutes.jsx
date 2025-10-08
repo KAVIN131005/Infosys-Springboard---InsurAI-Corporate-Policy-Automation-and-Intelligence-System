@@ -6,6 +6,7 @@ import UserDashboard from './pages/dashboard/UserDashboard';
 import SimpleUserDashboard from './pages/dashboard/SimpleUserDashboard';
 import BrokerUploadPolicy from './pages/broker/BrokerUploadPolicy';
 import BrokerPolicies from './pages/broker/BrokerPolicies';
+import UserPolicies from './pages/user/UserPolicies';
 import PolicyView from './pages/policy/PolicyView';
 import PolicyComparePage from './pages/policy/PolicyComparePage';
 import SubmitClaim from './pages/claim/SubmitClaim';
@@ -35,6 +36,8 @@ function SimpleAppRoutes() {
           <Route path="/admin" element={<AdminDashboard />} />
           
           {/* Policy Routes */}
+          <Route path="/policies" element={<UserPolicies />} />
+          <Route path="/user/policies" element={<UserPolicies />} />
           <Route path="/policy/view/:id" element={<PolicyView />} />
           <Route path="/policy/compare" element={<PolicyComparePage />} />
           
